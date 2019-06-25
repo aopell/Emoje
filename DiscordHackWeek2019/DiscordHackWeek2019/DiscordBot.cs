@@ -14,32 +14,30 @@ namespace DiscordHackWeek2019
         public static DiscordBot MainInstance = null;
         public DiscordSocketClient Client { get; private set; }
         public Secret Secret { get; private set; }
+        public Options Options { get; private set; }
         public LiteDatabase DataProvider { get; set; }
 
-        static void Main(string[] args)
+        private static async Task Main()
         {
             AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
             AppDomain.CurrentDomain.ProcessExit += CurrentDomain_ProcessExit;
+
             MainInstance = new DiscordBot();
-            MainInstance.MainAsync().GetAwaiter().GetResult();
-        }
 
-        private async Task MainAsync()
-        {
-            ConfigFileManager.LoadConfigFiles(this);
-            Client = new DiscordSocketClient();
+            ConfigFileManager.LoadConfigFiles(MainInstance);
+            MainInstance.Client = new DiscordSocketClient();
 
-            DataProvider = new LiteDatabase("data.db");
+            MainInstance.DataProvider = new LiteDatabase("data.db");
 
-            Client.Log += Log;
-            Client.Ready += Client_Ready;
-            Client.ReactionAdded += Client_ReactionAdded;
+            MainInstance.Client.Log += MainInstance.Log;
+            MainInstance.Client.Ready += MainInstance.Client_Ready;
+            MainInstance.Client.ReactionAdded += MainInstance.Client_ReactionAdded;
 
-            await Client.LoginAsync(TokenType.Bot, Secret.Token);
-            await Client.StartAsync();
+            await MainInstance.Client.LoginAsync(TokenType.Bot, MainInstance.Secret.Token);
+            await MainInstance.Client.StartAsync();
 
             var ch = new CommandHandler(
-                Client,
+                MainInstance.Client,
                 new CommandService(
                     new CommandServiceConfig()
                     {
@@ -47,7 +45,7 @@ namespace DiscordHackWeek2019
                         LogLevel = LogSeverity.Info
                     }
                 ),
-                this
+                MainInstance
             );
 
             await ch.InstallCommandsAsync();

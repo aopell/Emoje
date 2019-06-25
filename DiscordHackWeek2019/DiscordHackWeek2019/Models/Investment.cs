@@ -16,11 +16,22 @@ namespace DiscordHackWeek2019.Models
     public class InvestmentPortfolio
     {
         public Dictionary<string, IEnumerable<Investment>> Items { get; set; }
+
+        public InvestmentPortfolio()
+        {
+            Items = new Dictionary<string, IEnumerable<Investment>>();
+        }
     }
 
     public class PortfolioCollection
     {
         public InvestmentPortfolio Stocks { get; set; }
         public InvestmentPortfolio Crypto { get; set; }
+
+        public PortfolioCollection()
+        {
+            Stocks = new InvestmentPortfolio();
+            Crypto = new InvestmentPortfolio();
+        }
     }
 }

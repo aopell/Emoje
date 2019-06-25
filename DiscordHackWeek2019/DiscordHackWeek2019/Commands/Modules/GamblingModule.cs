@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using DiscordHackWeek2019.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,9 +13,23 @@ namespace DiscordHackWeek2019.Commands.Modules
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
             [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
-            public Task Buy(int count = 1, string type = null)
+            public async Task Buy(int count = 1, string type = null)
             {
-                throw new NotImplementedException();
+                if (!Context.UserJoined(Context.User.Id))
+                {
+                    // User has already joined
+                    await ReplyAsync($"You must join first blah blah blah"); // TODO: real message
+                    return;
+                }
+
+                var user = Context.CallerProfile;
+
+                long id = Context.EmojiCollection.Insert(new Emoji()
+                {
+                    Unicode = "",
+                    Owner = Context.User.Id,
+                    Transactions = new List<TransactionInfo>()
+                });
             }
 
             [Command("open"), Summary("Open a lootbox")]

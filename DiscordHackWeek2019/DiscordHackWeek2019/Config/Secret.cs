@@ -4,7 +4,7 @@ using System.Text;
 
 namespace DiscordHackWeek2019.Config
 {
-    [ConfigFile("secret.json")]
+    [ConfigFile("Config/secret.json")]
     public class Secret : Config
     {
         public string Token { get; set; }
