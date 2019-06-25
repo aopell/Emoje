@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using DiscordHackWeek2019.Models;
 using System;
 using System.Collections.Generic;
 using System.Text;

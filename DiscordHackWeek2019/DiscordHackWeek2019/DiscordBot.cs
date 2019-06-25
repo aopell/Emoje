@@ -3,7 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordHackWeek2019.Commands;
 using DiscordHackWeek2019.Config;
-using DiscordHackWeek2019.Data;
+using LiteDB;
 using System;
 using System.Threading.Tasks;
 
@@ -14,7 +14,7 @@ namespace DiscordHackWeek2019
         public static DiscordBot MainInstance = null;
         public DiscordSocketClient Client { get; private set; }
         public Secret Secret { get; private set; }
-        public IDataProvider DataProvider { get; set; }
+        public LiteDatabase DataProvider { get; set; }
 
         static void Main(string[] args)
         {
@@ -29,7 +29,7 @@ namespace DiscordHackWeek2019
             ConfigFileManager.LoadConfigFiles(this);
             Client = new DiscordSocketClient();
 
-            DataProvider = new LiteDbDataProvider("data.db");
+            DataProvider = new LiteDatabase("data.db");
 
             Client.Log += Log;
             Client.Ready += Client_Ready;
