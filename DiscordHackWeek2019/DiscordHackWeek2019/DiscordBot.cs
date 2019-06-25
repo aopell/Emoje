@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordHackWeek2019.Commands;
 using DiscordHackWeek2019.Config;
+using DiscordHackWeek2019.Data;
 using System;
 using System.Threading.Tasks;
 
@@ -13,6 +14,7 @@ namespace DiscordHackWeek2019
         public static DiscordBot MainInstance = null;
         public DiscordSocketClient Client { get; private set; }
         public Secret Secret { get; private set; }
+        public IDataProvider DataProvider { get; set; }
 
         static void Main(string[] args)
         {
@@ -26,6 +28,8 @@ namespace DiscordHackWeek2019
         {
             ConfigFileManager.LoadConfigFiles(this);
             Client = new DiscordSocketClient();
+
+            DataProvider = new LiteDbDataProvider("data.db");
 
             Client.Log += Log;
             Client.Ready += Client_Ready;
@@ -42,7 +46,8 @@ namespace DiscordHackWeek2019
                         CaseSensitiveCommands = false,
                         LogLevel = LogSeverity.Info
                     }
-                )
+                ),
+                this
             );
 
             await ch.InstallCommandsAsync();

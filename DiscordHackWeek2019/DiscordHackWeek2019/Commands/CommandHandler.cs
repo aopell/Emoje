@@ -12,11 +12,13 @@ namespace DiscordHackWeek2019.Commands
     {
         private readonly DiscordSocketClient client;
         private readonly CommandService commands;
+        private readonly DiscordBot bot;
 
-        public CommandHandler(DiscordSocketClient client, CommandService commands)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, DiscordBot bot)
         {
             this.commands = commands;
             this.client = client;
+            this.bot = bot;
         }
 
         public async Task InstallCommandsAsync()
@@ -52,7 +54,7 @@ namespace DiscordHackWeek2019.Commands
                 return;
 
             // Create a WebSocket-based command context based on the message
-            var context = new SocketCommandContext(client, message);
+            var context = new BotCommandContext(client, message, bot);
 
             // Execute the command with the command context we just
             // created, along with the service provider for precondition checks.
