@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    public class ProfileModule : ModuleBase<SocketCommandContext>
+    public class ProfileModule : ModuleBase<BotCommandContext>
     {
         [Command("profile"), Summary("Displays the profile of yourself or another user")]
         public Task ViewProfile([Remainder] IUser user = null)

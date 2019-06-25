@@ -7,10 +7,10 @@ using System.Threading.Tasks;
 namespace DiscordHackWeek2019.Commands.Modules
 {
     [Group("market")]
-    public class MarketModule : ModuleBase<SocketCommandContext>
+    public class MarketModule : ModuleBase<BotCommandContext>
     {
         [Group("global")]
-        public class GlobalMarketModule : ModuleBase<SocketCommandContext>
+        public class GlobalMarketModule : ModuleBase<BotCommandContext>
         {
             [Command("listings"), Alias("view"), Summary("Views market listings for the global market")]
             public Task ViewListings()
@@ -32,7 +32,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Group("server")]
-        public class ServerMarketModule : ModuleBase<SocketCommandContext>
+        public class ServerMarketModule : ModuleBase<BotCommandContext>
         {
             [Command("listings"), Alias("view"), Summary("Views market listings for this server's market")]
             public Task ViewListings()
