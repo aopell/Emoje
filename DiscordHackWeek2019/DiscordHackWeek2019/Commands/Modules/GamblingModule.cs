@@ -1,4 +1,5 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using DiscordHackWeek2019.Models;
 using System;
 using System.Collections.Generic;
@@ -17,14 +18,13 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 if (!Context.UserJoined(Context.User.Id))
                 {
-                    // User has already joined
-                    await ReplyAsync($"You must join first blah blah blah"); // TODO: real message
+                    await ReplyAsync(Strings.UserJoinNeeded);
                     return;
                 }
 
                 var user = Context.CallerProfile;
 
-                long id = Context.EmojiCollection.Insert(new Emoji()
+                long id = Context.EmojiCollection.Insert(new Models.Emoji()
                 {
                     Unicode = "",
                     Owner = Context.User.Id,

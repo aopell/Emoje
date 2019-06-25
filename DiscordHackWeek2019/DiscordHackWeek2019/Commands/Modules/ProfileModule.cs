@@ -52,7 +52,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
             else
             {
-                await ReplyAsync($"They has {Context.UserCollection.GetById(user.Id).Currency} money");
+                await ReplyAsync($"{Context.WhatDoICall(user)} has {Context.UserCollection.GetById(user.Id).Currency} money");
             }
 
         }

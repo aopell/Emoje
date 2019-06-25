@@ -47,6 +47,14 @@ namespace DiscordHackWeek2019.Commands
             return u != null;
         }
 
+        public string WhatDoICall(IUser user)
+        {
+            var gu = user as IGuildUser;
+            return gu != null && !string.IsNullOrEmpty(gu.Nickname) ? gu.Nickname : user.Username;
+        }
+
+        public string WhoDoYouCall() => "Ghostbusters";
+
         public IUser GetUserOrSender(IUser user = null) => user ?? User;
 
         private LiteCollection<User> userCollection;
