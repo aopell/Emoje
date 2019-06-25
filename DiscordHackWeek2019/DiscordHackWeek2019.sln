@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28803.452
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DiscordHackWeek2019", "DiscordHackWeek2019\DiscordHackWeek2019.csproj", "{14A07FF7-C3A8-49AC-852C-E0E6999E6312}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{14A07FF7-C3A8-49AC-852C-E0E6999E6312}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14A07FF7-C3A8-49AC-852C-E0E6999E6312}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14A07FF7-C3A8-49AC-852C-E0E6999E6312}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14A07FF7-C3A8-49AC-852C-E0E6999E6312}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {392B648C-E6C2-472D-855B-FF275C71F6B8}
+	EndGlobalSection
+EndGlobal
