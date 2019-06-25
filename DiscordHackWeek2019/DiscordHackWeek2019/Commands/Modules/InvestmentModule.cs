@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace DiscordHackWeek2019.Commands.Modules
 {
     [Group("investments")]
-    public class InvestmentModule : ModuleBase<SocketCommandContext>
+    public class InvestmentModule : ModuleBase<BotCommandContext>
     {
         [Command("buy"), Alias("purchase", "order"), Summary("Invest in stock or cryptocurrency")]
         public Task Buy()

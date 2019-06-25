@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    public class GamblingModule : ModuleBase<SocketCommandContext>
+    public class GamblingModule : ModuleBase<BotCommandContext>
     {
         [Group("lootbox"), Alias("box", "lootboxes")]
-        public class LootBoxModule : ModuleBase<SocketCommandContext>
+        public class LootBoxModule : ModuleBase<BotCommandContext>
         {
             [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
             public Task Buy(int count = 1, string type = null)
