@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordHackWeek2019.Helpers;
 using DiscordHackWeek2019.Models;
 using LiteDB;
 using System;
@@ -58,11 +59,15 @@ namespace DiscordHackWeek2019.Commands
 
         public EmbedBuilder EmbedFromUser(IUser user) => new EmbedBuilder().WithAuthor(WhatDoICall(user), user.AvatarUrlOrDefaultAvatar());
 
-        public User GetProfile(IUser user) => UserCollection.GetById(user.Id) ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
+        public User GetProfile(IUser user) => GetProfile(user.Id);
+        public User GetProfile(ulong user) => UserCollection.GetById(user) ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
 
         public string WhoDoYouCall() => "Ghostbusters";
 
         public IUser GetUserOrSender(IUser user = null) => user ?? User;
+
+        public InventoryWrapper GetInventory(IUser user) => GetInventory(user.Id);
+        public InventoryWrapper GetInventory(ulong user) => new InventoryWrapper(this, user);
 
         private LiteCollection<User> userCollection;
 

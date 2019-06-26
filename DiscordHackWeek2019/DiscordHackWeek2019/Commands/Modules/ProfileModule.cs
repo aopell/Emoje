@@ -27,7 +27,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 UserId = Context.User.Id,
                 Currency = Context.Bot.Options.StartingCurrency,
                 CurrentInvestments = new PortfolioCollection(),
-                Inventory = new Dictionary<string, List<ulong>>(),
+                Inventory = new Dictionary<string, List<Guid>>(),
                 LootBoxes = new Dictionary<string, int>(),
                 PreviousInvestments = new PortfolioCollection(),
                 Transactions = new List<TransactionInfo>()

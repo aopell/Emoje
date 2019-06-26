@@ -3,7 +3,7 @@ using System.IO;
 
 namespace DiscordHackWeek2019.Helpers
 {
-    class EmojiHelper
+    public class EmojiHelper
     {
         public IReadOnlyCollection<string> IterateAllEmoji { get => EmojiToName.Keys; }
 
@@ -27,5 +27,7 @@ namespace DiscordHackWeek2019.Helpers
         public string GetNameFromEmoji(string emoji) => EmojiToName[emoji];
 
         public string GetEmojiFromName(string name) => NameToEmoji[name];
+
+        public bool IsValidEmoji(string emoji) => EmojiToName.ContainsKey(emoji);
     }
 }

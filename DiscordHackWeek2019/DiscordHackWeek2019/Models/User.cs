@@ -11,7 +11,7 @@ namespace DiscordHackWeek2019.Models
         public Dictionary<string, int> LootBoxes { get; set; }
         public PortfolioCollection CurrentInvestments { get; set; }
         public PortfolioCollection PreviousInvestments { get; set; }
-        public Dictionary<string, List<ulong>> Inventory { get; set; }
+        public Dictionary<string, List<Guid>> Inventory { get; set; }
         public List<TransactionInfo> Transactions { get; set; }
     }
 }

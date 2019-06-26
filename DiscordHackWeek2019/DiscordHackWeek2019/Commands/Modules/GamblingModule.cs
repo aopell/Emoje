@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -22,14 +23,25 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                var user = Context.CallerProfile;
+                var allEmoji = Context.Bot.EmojiHelper.IterateAllEmoji;
+                int size = allEmoji.Count();
 
-                long id = Context.EmojiCollection.Insert(new Models.Emoji()
+                var inventory = Context.GetInventory(Context.User);
+
+                var awaitList = new List<Task>();
+
+                for (int i = 0; i < 4; i++)
                 {
-                    Unicode = "",
-                    Owner = Context.User.Id,
-                    Transactions = new List<TransactionInfo>()
-                });
+                    string emoji = allEmoji.ElementAt(Context.Bot.Random.Next(size - 1));
+
+                    awaitList.Add(ReplyAsync(emoji));
+
+                    inventory.Add(new Models.Emoji { Unicode = emoji, Transactions = new List<TransactionInfo>() });
+                }
+
+                Task.WaitAll(awaitList.ToArray());
+
+                inventory.Save();
             }
 
             [Command("open"), Summary("Open a lootbox")]

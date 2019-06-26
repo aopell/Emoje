@@ -9,9 +9,9 @@ namespace DiscordHackWeek2019.Models
 {
     public class Emoji
     {
-        public ulong EmojiId { get; set; }
+        public Guid EmojiId { get; set; }
         public string Unicode { get; set; }
         public ulong Owner { get; set; }
-        public IEnumerable<TransactionInfo> Transactions { get; set; }
+        public List<TransactionInfo> Transactions { get; set; }
     }
 }
