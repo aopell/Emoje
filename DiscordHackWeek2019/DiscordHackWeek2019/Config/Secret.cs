@@ -9,5 +9,6 @@ namespace DiscordHackWeek2019.Config
     {
         public string Token { get; set; }
         public string IexCloudSecret { get; set; }
+        public string IexCloudTestingSecret { get; set; }
     }
 }
