@@ -1,4 +1,5 @@
 ﻿using Discord.Commands;
+using DiscordHackWeek2019.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,6 +22,11 @@ namespace DiscordHackWeek2019.Commands.Modules
             [Command("buy"), Alias("purchase", "order"), Summary("Purchase an emoji from the global market")]
             public async Task BuyEmoji(string thing)
             {
+                if (!Context.Bot.EmojiHelper.IsValidEmoji(thing))
+                {
+                    await ReplyAsync($"{thing} cannot be bought or sold.");
+                    return;
+                }
                 // TODO: actually buy it
                 await ReplyAsync("Cost: " + Helpers.MarketHelper.getEmojiPrice(Context, 0, thing));
             }
@@ -28,6 +34,12 @@ namespace DiscordHackWeek2019.Commands.Modules
             [Command("sell"), Alias("offer"), Summary("Put one of your emoji up for sale on the global market")]
             public async Task SellEmoji(string emoji, float price)
             {
+                if (!Context.Bot.EmojiHelper.IsValidEmoji(emoji))
+                {
+                    await ReplyAsync($"{emoji} cannot be bought or sold.");
+                    return;
+                }
+
                 if (price <= 0)
                 {
                     await ReplyAsync("Please enter in a valid price");
@@ -37,7 +49,6 @@ namespace DiscordHackWeek2019.Commands.Modules
                 // TODO: get this data from the inventory and remove it from there
                 Models.Emoji toSell = new Models.Emoji
                 {
-                    EmojiId = 4,
                     Unicode = emoji,
                     Owner = Context.User.Id,
                     Transactions = null
