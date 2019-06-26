@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordHackWeek2019.Commands;
 using DiscordHackWeek2019.Config;
+using DiscordHackWeek2019.Models;
 using LiteDB;
 using System;
 using System.Threading.Tasks;
@@ -15,7 +16,8 @@ namespace DiscordHackWeek2019
         public DiscordSocketClient Client { get; private set; }
         public Secret Secret { get; private set; }
         public Options Options { get; private set; }
-        public LiteDatabase DataProvider { get; set; }
+        public LiteDatabase DataProvider { get; private set; }
+        public EmojiHelper EmojiHelper { get; private set; }
 
         private static async Task Main()
         {
@@ -28,6 +30,7 @@ namespace DiscordHackWeek2019
             MainInstance.Client = new DiscordSocketClient();
 
             MainInstance.DataProvider = new LiteDatabase("data.db");
+            MainInstance.EmojiHelper = new EmojiHelper("Config/emoji.tsv");
 
             MainInstance.Client.Log += MainInstance.Log;
             MainInstance.Client.Ready += MainInstance.Client_Ready;

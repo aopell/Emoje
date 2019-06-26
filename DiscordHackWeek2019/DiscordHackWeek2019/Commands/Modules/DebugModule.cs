@@ -10,9 +10,14 @@ namespace DiscordHackWeek2019.Commands.Modules
     public class DebugModule : ModuleBase<BotCommandContext>
     {
         [Command("emojilist")]
-        public Task Offer()
+        public async Task EmojiList()
         {
-
+            var sb = new StringBuilder();
+            foreach (var emoji in Context.Bot.EmojiHelper.IterateAllEmoji)
+            {
+                sb.Append(emoji);
+            }
+            await ReplyAsync(sb.ToString());
         }
     }
 }
