@@ -1,4 +1,5 @@
-﻿using LiteDB;
+﻿using Discord;
+using LiteDB;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,5 +27,6 @@ namespace DiscordHackWeek2019
             second = list.Count > 1 ? list[1] : default(T); // or throw
             rest = list.Skip(2).ToList();
         }
+        public static string AvatarUrlOrDefaultAvatar(this IUser user) => user.GetAvatarUrl() ?? $"https://cdn.discordapp.com/embed/avatars/{user.DiscriminatorValue % 5}.png";
     }
 }
