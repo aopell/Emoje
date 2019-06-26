@@ -33,7 +33,6 @@ namespace DiscordHackWeek2019.Commands.Modules
                 Transactions = new List<TransactionInfo>()
             });
 
-
             await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Bot.Options.StartingCurrency} currency has been deposited to your account.");
         }
 

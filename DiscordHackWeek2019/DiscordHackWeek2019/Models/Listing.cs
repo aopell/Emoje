@@ -7,7 +7,6 @@ namespace DiscordHackWeek2019.Models
 {
     public class Listing
     {
-        public ulong ListingId { get; set; }
         public ulong UserId { get; set; }
         public ulong EmojiId { get; set; }
         public float Price { get; set; }

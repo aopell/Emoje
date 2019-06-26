@@ -7,6 +7,7 @@ using DiscordHackWeek2019.Helpers;
 using DiscordHackWeek2019.Models;
 using LiteDB;
 using System;
+using System.Runtime.Caching;
 using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019
