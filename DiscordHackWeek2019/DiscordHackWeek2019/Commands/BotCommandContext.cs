@@ -13,6 +13,9 @@ namespace DiscordHackWeek2019.Commands
     {
         public DiscordBot Bot { get; set; }
 
+        private User _user = null;
+        private User CurrentUser => _user ?? (_user = UserCollection.GetById(User.Id));
+
         public LiteCollection<User> UserCollection
         {
             get
@@ -39,7 +42,7 @@ namespace DiscordHackWeek2019.Commands
             }
         }
 
-        public User CallerProfile => UserCollection.GetById(User.Id) ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
+        public User CallerProfile => CurrentUser ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
 
         public bool UserJoined(ulong id)
         {
@@ -52,6 +55,10 @@ namespace DiscordHackWeek2019.Commands
             var gu = user as IGuildUser;
             return gu != null && !string.IsNullOrEmpty(gu.Nickname) ? gu.Nickname : user.Username;
         }
+
+        public EmbedBuilder EmbedFromUser(IUser user) => new EmbedBuilder().WithAuthor(WhatDoICall(user), user.AvatarUrlOrDefaultAvatar());
+
+        public User GetProfile(IUser user) => UserCollection.GetById(user.Id) ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
 
         public string WhoDoYouCall() => "Ghostbusters";
 

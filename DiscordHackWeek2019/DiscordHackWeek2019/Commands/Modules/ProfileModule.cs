@@ -34,27 +34,31 @@ namespace DiscordHackWeek2019.Commands.Modules
             });
 
 
-            await ReplyAsync($"Welcome {Context.User.Mention}! You have currency."); // TODO: real message
+            await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Bot.Options.StartingCurrency} currency has been deposited to your account.");
         }
 
         [Command("profile"), Summary("Displays the profile of yourself or another user")]
         public async Task ViewProfile([Remainder] IUser user = null)
         {
-            if (!Context.UserJoined(Context.GetUserOrSender(user).Id))
+            user = Context.GetUserOrSender(user);
+            if (!Context.UserJoined(user.Id))
             {
                 await ReplyAsync(Strings.UserJoinNeeded);
                 return;
             }
 
-            if (user == null)
-            {
-                await ReplyAsync($"You have {Context.CallerProfile.Currency} money");
-            }
-            else
-            {
-                await ReplyAsync($"{Context.WhatDoICall(user)} has {Context.UserCollection.GetById(user.Id).Currency} money");
-            }
+            var profile = Context.GetProfile(user);
 
+            var embed = Context.EmbedFromUser(user);
+            embed.WithTitle("Profile");
+            embed.AddField("Currency", profile.Currency, true);
+            embed.AddField("Unique Emoji", profile.Inventory.Count, true);
+            embed.AddField("Owned Loot Boxes", profile.LootBoxes.Count, true);
+            embed.AddField("Transactions Completed", profile.Transactions.Count, true);
+            embed.AddField("Unique Stocks", profile.CurrentInvestments.Stocks.Items.Count, true);
+            embed.AddField("Unique Cryptocurrencies", profile.CurrentInvestments.Crypto.Items.Count, true);
+
+            await ReplyAsync(embed: embed.Build());
         }
 
         [Command("inventory"), Summary("Displays the inventory of yourself or another user")]
