@@ -15,10 +15,16 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Group("lootbox"), Alias("box", "lootboxes"), JoinRequired]
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
-            [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
+            [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes, opening it instantly")]
             public async Task Buy(int count = 1, string type = "normal")
             {
-                // TODO: Limit count
+                // Limit count
+                if(count > 5 || count < 1)
+                {
+                    await ReplyAsync("You can only open up to 5 loot boxes at a time.");
+                    return;
+                }
+
                 StringBuilder message = new StringBuilder();
                 var inventory = Context.GetInventory(Context.User);
 
