@@ -62,15 +62,20 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                // TODO: get this data from the inventory and remove it from there
-                Models.Emoji toSell = new Models.Emoji
-                {
-                    Unicode = emoji,
-                    Owner = Context.User.Id,
-                    Transactions = null
-                };
-                var added = MarketHelper.AddListing(Context, 0, toSell, price);
-                await ReplyAsync($"Added a listing selling {emoji} for ${added.Price}");
+                var message = await ReplyAsync($"Are you sure you want to sell {emoji} for ${price}?");
+                ReactionMessageHelper.CreateReactionMessage(Context, message,
+                    async r =>
+                    {
+                        // TODO: get this data from the inventory and remove it from there
+                        Models.Emoji toSell = new Models.Emoji
+                        {
+                            Unicode = emoji,
+                            Owner = Context.User.Id,
+                            Transactions = null
+                        };
+                        var added = MarketHelper.AddListing(Context, 0, toSell, price);
+                        await ReplyAsync($"Added a listing: {emoji}: ${added.Price}");
+                    }, r => Task.CompletedTask);
             }
         }
 
