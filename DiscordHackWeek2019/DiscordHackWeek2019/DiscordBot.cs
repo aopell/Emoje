@@ -43,9 +43,6 @@ namespace DiscordHackWeek2019
 
             MainInstance.Clerk = new Clerk();
 
-            MainInstance.Clerk.Thread = new Thread(MainInstance.Clerk.Process);
-            MainInstance.Clerk.Thread.Start();
-
             await MainInstance.Client.LoginAsync(TokenType.Bot, MainInstance.Secret.Token);
             await MainInstance.Client.StartAsync();
 

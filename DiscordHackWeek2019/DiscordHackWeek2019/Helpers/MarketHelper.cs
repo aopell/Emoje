@@ -6,6 +6,7 @@ using DiscordHackWeek2019.Models;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using OneOf;
 
 namespace DiscordHackWeek2019.Helpers
 {
@@ -170,81 +171,75 @@ namespace DiscordHackWeek2019.Helpers
 
     public class Clerk
     {
-        public Thread Thread { get; set; }
+        private readonly Thread Thread;
 
-        private readonly ConcurrentQueue<PostListing> ToPost = new ConcurrentQueue<PostListing>();
-        private readonly ConcurrentQueue<Purchase> ToProcess = new ConcurrentQueue<Purchase>();
-        private readonly ConcurrentQueue<Transaction> ToSave = new ConcurrentQueue<Transaction>();
+        private readonly BlockingCollection<OneOf<PostListing, Purchase, Transaction>> ToProcess = new BlockingCollection<OneOf<PostListing, Purchase, Transaction>>(new ConcurrentQueue<OneOf<PostListing, Purchase, Transaction>>());
 
-        public void Process()
+        public Clerk()
         {
-            while (true)
+            Thread = new Thread(Process);
+            Thread.Start();
+        }
+
+        public void Queue(OneOf<PostListing, Purchase, Transaction> listing)
+        {
+            ToProcess.Add(listing);
+        }
+
+        private void Process()
+        {
+            var marketDB = DiscordBot.MainInstance.DataProvider.GetCollection<Market>("markets");
+
+            foreach (var thing in ToProcess.GetConsumingEnumerable())
             {
-                var marketDB = DiscordBot.MainInstance.DataProvider.GetCollection<Market>("markets");
-
-                while (ToPost.TryDequeue(out var newListing))
-                {
-                    var market = GetOrCreate(marketDB, newListing.MarketId);
-
-                    if (newListing.IsNew) newListing.Listing.Timestamp = DateTimeOffset.Now;
-
-                    List<Listing> list;
-                    if (!market.Listings.ContainsKey(newListing.Emoji))
+                thing.Switch(
+                    newListing =>
                     {
-                        list = new List<Listing>();
-                        market.Listings.Add(newListing.Emoji, list);
-                    }
-                    else
-                    {
-                        list = market.Listings[newListing.Emoji];
-                    }
+                        var market = GetOrCreate(marketDB, newListing.MarketId);
 
-                    list.Add(newListing.Listing);
+                        if (newListing.IsNew) newListing.Listing.Timestamp = DateTimeOffset.Now;
 
-                    marketDB.Upsert(market);
-                }
+                        List<Listing> list;
+                        if (!market.Listings.ContainsKey(newListing.Emoji))
+                        {
+                            list = new List<Listing>();
+                            market.Listings.Add(newListing.Emoji, list);
+                        }
+                        else
+                        {
+                            list = market.Listings[newListing.Emoji];
+                        }
 
-                while (ToProcess.TryDequeue(out var purchase))
-                {
-                    var market = GetOrCreate(marketDB, purchase.MarketId);
-
-                    if (market.Listings.TryGetValue(purchase.Emoji, out var listings) && listings.Count() != 0)
-                    {
-                        (var lowest, var index) = listings.Select((l, i) => (l, i)).OrderBy(pair => pair.l.Price).FirstOrDefault();
-
-                        listings.RemoveAt(index);
+                        list.Add(newListing.Listing);
 
                         marketDB.Upsert(market);
+                    },
+                    purchase =>
+                    {
+                        var market = GetOrCreate(marketDB, purchase.MarketId);
 
-                        ProcessPurchase(purchase, lowest);
+                        if (market.Listings.TryGetValue(purchase.Emoji, out var listings) && listings.Count() != 0)
+                        {
+                            (var lowest, var index) = listings.Select((l, i) => (l, i)).OrderBy(pair => pair.l.Price).FirstOrDefault();
+
+                            listings.RemoveAt(index);
+
+                            marketDB.Upsert(market);
+
+                            ProcessPurchase(purchase, lowest);
+                        }
+                    },
+                    transaction =>
+                    {
+                        var market = GetOrCreate(marketDB, transaction.MarketId);
+
+                        transaction.Timestamp = DateTimeOffset.Now;
+                        market.Transactions.Add(transaction);
+
+                        marketDB.Upsert(market);
                     }
-                }
-
-                while (ToSave.TryDequeue(out var transaction))
-                {
-                    var market = GetOrCreate(marketDB, transaction.MarketId);
-
-                    transaction.Timestamp = DateTimeOffset.Now;
-                    market.Transactions.Add(transaction);
-
-                    marketDB.Upsert(market);
-                }
+                );
             }
-        }
-
-        public void Queue(PostListing listing)
-        {
-            ToPost.Enqueue(listing);
-        }
-
-        public void Queue(Purchase purchase)
-        {
-            ToProcess.Enqueue(purchase);
-        }
-
-        public void Queue(Transaction transaction)
-        {
-            ToSave.Enqueue(transaction);
         }
 
         private Market GetOrCreate(LiteDB.LiteCollection<Market> marketDB, ulong marketId)
