@@ -11,7 +11,7 @@ namespace DiscordHackWeek2019.Models
         public ulong Market { get; set; }
         public ulong From { get; set; }
         public ulong To { get; set; }
-        public float Amount { get; set; }
+        public int Amount { get; set; }
         public DateTimeOffset Timestamp { get; set; }
 
         public TransactionInfo GetInfo() => new TransactionInfo { MarketId = Market, TransactionId = TransactionId };

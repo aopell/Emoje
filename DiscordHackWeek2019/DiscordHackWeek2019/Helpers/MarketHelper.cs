@@ -10,7 +10,7 @@ namespace DiscordHackWeek2019.Helpers
     {
         // Adds a listing to the market, transfering ownership of the emoji from the seller to the market
         // Returns the added listing
-        public static Listing addListing(BotCommandContext context, ulong marketId, Emoji emoji, float price)
+        public static Listing AddListing(BotCommandContext context, ulong marketId, Emoji emoji, int price)
         {
             // Get the corresponding market
             var marketsDB = context.Bot.DataProvider.GetCollection<Market>("markets");
@@ -47,7 +47,7 @@ namespace DiscordHackWeek2019.Helpers
         }
 
         // Lets a user buy a listing, transfering ownership of the emoji from the market to the buyer
-        public static void buyListing(BotCommandContext context, ulong maretId, string emojiUnicode, ulong buyer)
+        public static void BuyListing(BotCommandContext context, ulong maretId, string emojiUnicode, ulong buyer)
         {
             // TODO: Take ownership of the cheapest listing and confirm purchase
             // TODO: Record transaction in market and emoji
@@ -55,7 +55,7 @@ namespace DiscordHackWeek2019.Helpers
         }
 
         // Gets the emoji price. Returns float.NaN if there are none for sale
-        public static float getEmojiPrice(BotCommandContext context, ulong marketId, string emojiUnicode)
+        public static (int, bool valid) GetEmojiPrice(BotCommandContext context, ulong marketId, string emojiUnicode)
         {
             // Make sure market exists
             var marketsDB = context.Bot.DataProvider.GetCollection<Market>("markets");
@@ -63,23 +63,23 @@ namespace DiscordHackWeek2019.Helpers
             if (market == null)
             {
                 // Market does not exist
-                return float.NaN;
+                return (0, false);
             }
 
             if (market.Listings.ContainsKey(emojiUnicode))
             {
-                Listing cheapest = cheapestListing(market.Listings[emojiUnicode]);
+                Listing cheapest = CheapestListing(market.Listings[emojiUnicode]);
                 if (cheapest != null)
                 {
                     // There is a valid listing for sale
-                    return cheapest.Price;
+                    return (cheapest.Price, true);
                 }
             }
 
-            return float.NaN;
+            return (0, false);
         }
 
-        private static Listing cheapestListing(List<Listing> listings)
+        private static Listing CheapestListing(List<Listing> listings)
         {
             return listings.OrderBy(listing => listing.Price).FirstOrDefault();
         }
