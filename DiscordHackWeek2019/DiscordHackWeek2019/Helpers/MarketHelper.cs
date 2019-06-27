@@ -79,6 +79,8 @@ namespace DiscordHackWeek2019.Helpers
             return (0, false);
         }
 
+        // Get a dictionary of rarities from rarity to a list of emojis for the given market
+        // Returns null if the market does not exist
         public static Dictionary<Rarity, List<string>> GetRarities(BotCommandContext context, ulong marketId)
         {
             // Make sure market exists
