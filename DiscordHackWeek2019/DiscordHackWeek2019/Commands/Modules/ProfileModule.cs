@@ -51,12 +51,12 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             var embed = Context.EmbedFromUser(user);
             embed.WithTitle("Profile");
-            embed.AddField("Currency", profile.Currency, true);
-            embed.AddField("Unique Emoji", profile.Inventory.Count, true);
-            embed.AddField("Owned Loot Boxes", profile.LootBoxes.Count, true);
-            embed.AddField("Transactions Completed", profile.Transactions.Count, true);
-            embed.AddField("Unique Stocks", profile.CurrentInvestments.Stocks.Items.Values.Count(x => x.Count > 0), true);
-            embed.AddField("Unique Cryptocurrencies", profile.CurrentInvestments.Crypto.Items.Values.Count(x => x.Count > 0), true);
+            embed.AddField("Currency", $"{Strings.moneyEmoji} " + profile.Currency, true);
+            embed.AddField("Unique Emoji", $"{Strings.emojiEmoji} " + profile.Inventory.Count, true);
+            embed.AddField("Owned Loot Boxes", $"{Strings.boxEmoji} " + profile.LootBoxes.Count, true);
+            embed.AddField("Transactions Completed", $"{Strings.transactionEmoji} " + profile.Transactions.Count, true);
+            embed.AddField("Unique Stocks", $"{Strings.stockEmoji} " + profile.CurrentInvestments.Stocks.Items.Values.Count(x => x.Count > 0), true);
+            embed.AddField("Unique Cryptocurrencies", $"{Strings.cryptoEmoji} " + profile.CurrentInvestments.Crypto.Items.Values.Count(x => x.Count > 0), true);
 
             await ReplyAsync(embed: embed.Build());
         }
