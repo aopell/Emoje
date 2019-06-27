@@ -81,10 +81,10 @@ namespace DiscordHackWeek2019.Helpers
 
         // Get a dictionary of rarities from rarity to a list of emojis for the given market
         // Returns null if the market does not exist
-        public static Dictionary<Rarity, List<string>> GetRarities(BotCommandContext context, ulong marketId)
+        public static Dictionary<Rarity, List<string>> GetRarities(DiscordBot bot, ulong marketId)
         {
             // Make sure market exists
-            var marketsDB = context.Bot.DataProvider.GetCollection<Market>("markets");
+            var marketsDB = bot.DataProvider.GetCollection<Market>("markets");
             var market = marketsDB.GetById(marketId);
             if (market == null)
             {
@@ -92,12 +92,18 @@ namespace DiscordHackWeek2019.Helpers
                 return null;
             }
 
-            // Get allll the prices
             List<KeyValuePair<int, string>> prices = new List<KeyValuePair<int, string>>();
-            foreach (string key in market.Listings.Keys)
+            foreach (string key in Helpers.EmojiHelper.IterateAllEmoji)
             {
-                var listing = CheapestListing(market.Listings[key]);
-                prices.Add(new KeyValuePair<int, string>(listing.Price, key));
+                if (market.Listings.ContainsKey(key) && market.Listings[key].Count > 0)
+                {
+                    var listing = CheapestListing(market.Listings[key]);
+                    prices.Add(new KeyValuePair<int, string>(listing.Price, key));
+                }
+                else
+                {
+                    prices.Add(new KeyValuePair<int, string>(0, key));
+                }
             }
 
             // Set up the results dictionary
@@ -108,14 +114,16 @@ namespace DiscordHackWeek2019.Helpers
             }
 
             // Seperate into rarities
-            var pricesEnum = prices.OrderBy(emojiPair => emojiPair.Key);
+            var pricesEnum = prices.OrderBy(emojiPair => emojiPair.Key).ToList();
             int pos = 0;
             foreach (var emojiPair in pricesEnum)
             {
-                int rank = ((pos + 1) * 100) / pricesEnum.Count();
+                int rank = ((pos + 1) * 100) / pricesEnum.Count;
+                int percentSum = 0;
                 foreach (Rarity rarity in Rarity.Rarities)
                 {
-                    if (rank <= rarity.PercentMax)
+                    percentSum += rarity.Percent;
+                    if (rank <= percentSum)
                     {
                         result[rarity].Add(emojiPair.Value);
                         break;
@@ -136,29 +144,26 @@ namespace DiscordHackWeek2019.Helpers
 
 public sealed class Rarity
 {
-    public static Rarity Common = new Rarity(0, 40, "Common", System.Drawing.Color.White);
-    public static Rarity Rare = new Rarity(40, 70, "Rare", System.Drawing.Color.SkyBlue);
-    public static Rarity Epic = new Rarity(70, 90, "Epic", System.Drawing.Color.Purple);
-    public static Rarity Legendary = new Rarity(90, 100, "Legendary", System.Drawing.Color.Orange);
+    public static Rarity Common = new Rarity(40, "Common", System.Drawing.Color.White, Strings.commonLeft, Strings.commonRight);
+    public static Rarity Rare = new Rarity(30, "Rare", System.Drawing.Color.SkyBlue, Strings.rareLeft, Strings.rareRight);
+    public static Rarity Epic = new Rarity(20, "Epic", System.Drawing.Color.Purple, Strings.epicLeft, Strings.epicRight);
+    public static Rarity Legendary = new Rarity(10, "Legendary", System.Drawing.Color.Orange, Strings.legendaryLeft, Strings.legendaryRight);
 
     // Must be in order (Least rare first)
     public static Rarity[] Rarities = { Common, Rare, Epic, Legendary };
 
-    public int PercentMax { get; }
-    public int PercentMin { get; }
+    public int Percent { get; }
     public string Label { get; }
     public System.Drawing.Color Color { get; }
+    public string LeftBracket { get; }
+    public string RightBracket { get; }
 
-    public int Percent()
+    private Rarity(int percent, String label, System.Drawing.Color color, string leftBracket, string rightBracket)
     {
-        return PercentMax - PercentMin;
-    }
-
-    private Rarity(int percentMin, int percentMax, String label, System.Drawing.Color color)
-    {
-        PercentMin = percentMin;
-        PercentMax = percentMax;
+        Percent = percent;
         Label = label;
         Color = color;
+        LeftBracket = leftBracket;
+        RightBracket = rightBracket;
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using DiscordHackWeek2019.Helpers;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -15,33 +16,28 @@ namespace DiscordHackWeek2019.Commands.Modules
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
             [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
-            public async Task Buy(int count = 1, string type = null)
+            public async Task Buy(int count = 1, string type = "normal")
             {
-                if (!Context.UserJoined(Context.User.Id))
-                {
-                    await ReplyAsync(Strings.UserJoinNeeded);
-                    return;
-                }
-
-                var allEmoji = Context.Bot.EmojiHelper.IterateAllEmoji;
-                int size = allEmoji.Count();
-
+                // TODO: Limit count
+                StringBuilder message = new StringBuilder();
                 var inventory = Context.GetInventory(Context.User);
 
-                var awaitList = new List<Task>();
-
-                for (int i = 0; i < 4; i++)
+                for (int i = 0; i < count; i++)
                 {
-                    string emoji = allEmoji.ElementAt(Context.Bot.Random.Next(size - 1));
+                    var result = LootBoxHelper.LootBoxVarieties[type].Open(Context.Bot, 0);
 
-                    awaitList.Add(ReplyAsync(emoji));
-
-                    inventory.Add(new Models.Emoji { Unicode = emoji, Transactions = new List<TransactionInfo>() });
+                    foreach (var (rarity, emoji) in result)
+                    {
+                        // TODO: Add transaction showing this is from a lootbox
+                        inventory.Add(new Models.Emoji { Owner = Context.User.Id, Transactions = new List<TransactionInfo>() { }, Unicode = emoji });
+                        message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket} ");
+                    }
+                    message.AppendLine();
                 }
 
-                Task.WaitAll(awaitList.ToArray());
-
                 inventory.Save();
+
+                await ReplyAsync(message.ToString());
             }
 
             [Command("open"), Summary("Open a lootbox")]

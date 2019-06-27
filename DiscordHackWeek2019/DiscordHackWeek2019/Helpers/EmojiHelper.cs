@@ -3,14 +3,14 @@ using System.IO;
 
 namespace DiscordHackWeek2019.Helpers
 {
-    public class EmojiHelper
+    public static class EmojiHelper
     {
-        public IReadOnlyCollection<string> IterateAllEmoji { get => EmojiToName.Keys; }
+        public static IReadOnlyCollection<string> IterateAllEmoji { get => EmojiToName.Keys; }
 
-        private readonly Dictionary<string, string> EmojiToName = new Dictionary<string, string>();
-        private readonly Dictionary<string, string> NameToEmoji = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> EmojiToName = new Dictionary<string, string>();
+        private static readonly Dictionary<string, string> NameToEmoji = new Dictionary<string, string>();
 
-        public EmojiHelper(string emojiTableName)
+        public static void Initialize(string emojiTableName)
         {
             using (var emojiTable = new StreamReader(File.OpenRead(emojiTableName)))
             {
@@ -24,10 +24,10 @@ namespace DiscordHackWeek2019.Helpers
             }
         }
 
-        public string GetNameFromEmoji(string emoji) => EmojiToName[emoji];
+        public static string GetNameFromEmoji(string emoji) => EmojiToName[emoji];
 
-        public string GetEmojiFromName(string name) => NameToEmoji[name];
+        public static string GetEmojiFromName(string name) => NameToEmoji[name];
 
-        public bool IsValidEmoji(string emoji) => EmojiToName.ContainsKey(emoji);
+        public static bool IsValidEmoji(string emoji) => EmojiToName.ContainsKey(emoji);
     }
 }

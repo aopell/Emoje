@@ -15,7 +15,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task EmojiList()
         {
             var sb = new StringBuilder();
-            foreach (var emoji in Context.Bot.EmojiHelper.IterateAllEmoji)
+            foreach (var emoji in EmojiHelper.IterateAllEmoji)
             {
                 sb.Append(emoji);
             }
@@ -63,14 +63,15 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task RaritiesMessage()
         {
             string message;
-            var emotes = Helpers.MarketHelper.GetRarities(Context, 0);
+            var emotes = Helpers.MarketHelper.GetRarities(Context.Bot, 0);
             foreach (var rarity in Rarity.Rarities)
             {
-                message = $"{rarity.Label}:\n";
+                message = $"```\n{rarity.Label}:\n";
                 foreach (var e in emotes[rarity])
                 {
                     message += new Discord.Emoji(e);
                 }
+                message += "\n```";
                 await ReplyAsync(message);
             }
         }

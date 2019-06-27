@@ -22,7 +22,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             [Command("buy"), Alias("purchase", "order"), Summary("Purchase an emoji from the global market")]
             public async Task BuyEmoji(string emoji)
             {
-                if (!Context.Bot.EmojiHelper.IsValidEmoji(emoji))
+                if (!EmojiHelper.IsValidEmoji(emoji))
                 {
                     await ReplyAsync($"{emoji} cannot be bought or sold.");
                     return;
@@ -34,7 +34,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             [Command("sell"), Alias("offer"), Summary("Put one of your emoji up for sale on the global market")]
             public async Task SellEmoji(string emoji, int price)
             {
-                if (!Context.Bot.EmojiHelper.IsValidEmoji(emoji))
+                if (!EmojiHelper.IsValidEmoji(emoji))
                 {
                     await ReplyAsync($"{emoji} cannot be bought or sold.");
                     return;

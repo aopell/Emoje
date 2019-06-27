@@ -20,7 +20,6 @@ namespace DiscordHackWeek2019
         public Secret Secret { get; private set; }
         public Options Options { get; private set; }
         public LiteDatabase DataProvider { get; private set; }
-        public EmojiHelper EmojiHelper { get; private set; }
         public Random Random { get; private set; }
 
         private static async Task Main()
@@ -35,7 +34,7 @@ namespace DiscordHackWeek2019
             MainInstance.Random = new Random();
 
             MainInstance.DataProvider = new LiteDatabase("data.db");
-            MainInstance.EmojiHelper = new EmojiHelper("Config/emoji.tsv");
+            EmojiHelper.Initialize("Config/emoji.tsv");
 
             MainInstance.Client.Log += MainInstance.Log;
             MainInstance.Client.Ready += MainInstance.Client_Ready;
