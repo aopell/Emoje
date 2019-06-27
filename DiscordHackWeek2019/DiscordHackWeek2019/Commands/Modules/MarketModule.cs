@@ -27,8 +27,24 @@ namespace DiscordHackWeek2019.Commands.Modules
                     await ReplyAsync($"{emoji} cannot be bought or sold.");
                     return;
                 }
-                // TODO: actually buy it
-                await ReplyAsync("Cost: " + MarketHelper.GetEmojiPrice(Context, 0, emoji));
+
+                (var price, var valid) = MarketHelper.GetEmojiPrice(Context, 0, emoji);
+
+                if (!valid)
+                {
+                    await ReplyAsync($"Sorry, {emoji} is not available");
+                    return;
+                }
+
+                int money = Context.CallerProfile.Currency;
+
+                if (price > money)
+                {
+                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you need ${price - money} more to buy {emoji}");
+                    return;
+                }
+
+                MarketHelper.BuyListing(Context, 0, emoji, Context.User.Id);
             }
 
             [Command("sell"), Alias("offer"), Summary("Put one of your emoji up for sale on the global market")]

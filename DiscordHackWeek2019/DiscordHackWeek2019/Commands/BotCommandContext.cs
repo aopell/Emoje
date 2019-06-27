@@ -43,6 +43,19 @@ namespace DiscordHackWeek2019.Commands
             }
         }
 
+        public LiteCollection<Market> MarketCollection
+        {
+            get
+            {
+                if (marketCollection == null)
+                {
+                    marketCollection = Bot.DataProvider.GetCollection<Market>("markets");
+                }
+
+                return marketCollection;
+            }
+        }
+
         public User CallerProfile => CurrentUser ?? throw new KeyNotFoundException("User did not exist. Check first, dummy");
 
         public bool UserJoined(ulong id)
@@ -68,10 +81,13 @@ namespace DiscordHackWeek2019.Commands
 
         public InventoryWrapper GetInventory(IUser user) => GetInventory(user.Id);
         public InventoryWrapper GetInventory(ulong user) => new InventoryWrapper(this, user);
+        public InventoryWrapper GetInventory(User user) => new InventoryWrapper(this, user);
 
         private LiteCollection<User> userCollection;
 
         private LiteCollection<Models.Emoji> emojiCollection;
+
+        private LiteCollection<Market> marketCollection;
 
         public BotCommandContext(DiscordSocketClient client, SocketUserMessage msg, DiscordBot bot) : base(client, msg)
         {

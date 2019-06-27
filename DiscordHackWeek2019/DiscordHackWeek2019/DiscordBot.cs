@@ -8,6 +8,7 @@ using DiscordHackWeek2019.Models;
 using LiteDB;
 using System;
 using System.Runtime.Caching;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019
@@ -21,6 +22,7 @@ namespace DiscordHackWeek2019
         public LiteDatabase DataProvider { get; private set; }
         public EmojiHelper EmojiHelper { get; private set; }
         public Random Random { get; private set; }
+        public Clerk Clerk { get; private set; }
 
         private static async Task Main()
         {
@@ -39,6 +41,11 @@ namespace DiscordHackWeek2019
             MainInstance.Client.Log += MainInstance.Log;
             MainInstance.Client.Ready += MainInstance.Client_Ready;
             MainInstance.Client.ReactionAdded += MainInstance.Client_ReactionAdded;
+
+            MainInstance.Clerk = new Clerk();
+
+            MainInstance.Clerk.Thread = new Thread(MainInstance.Clerk.Process);
+            MainInstance.Clerk.Thread.Start();
 
             await MainInstance.Client.LoginAsync(TokenType.Bot, MainInstance.Secret.Token);
             await MainInstance.Client.StartAsync();

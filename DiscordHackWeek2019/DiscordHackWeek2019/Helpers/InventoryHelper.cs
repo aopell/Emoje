@@ -20,17 +20,24 @@ namespace DiscordHackWeek2019.Helpers
             UserId = userId;
         }
 
+        public InventoryWrapper(BotCommandContext ctx, User user)
+        {
+            Context = ctx;
+            UserId = user.UserId;
+            this.user = user;
+        }
+
         private bool dirty = false;
-        private User _user = null;
+        private User user = null;
         public User User
         {
             get
             {
-                if (_user == null)
+                if (user == null)
                 {
-                    _user = Context.GetProfile(UserId);
+                    user = Context.GetProfile(UserId);
                 }
-                return _user;
+                return user;
             }
         }
 
@@ -40,11 +47,11 @@ namespace DiscordHackWeek2019.Helpers
 
         public IEnumerable<Emoji> Enumerate(string emoji) => User.Inventory[emoji].Select(id => Context.EmojiCollection.FindById(id));
 
-        public void Add(Emoji emoji)
+        public void Add(Emoji emoji, bool brandNew = false)
         {
             emoji.Owner = UserId;
             Guid id;
-            if (Context.EmojiCollection.FindById(emoji.EmojiId) == null)
+            if (brandNew)
             {
                 id = Context.EmojiCollection.Insert(emoji);
             }
@@ -60,9 +67,9 @@ namespace DiscordHackWeek2019.Helpers
 
         public void Save()
         {
-            if (dirty && _user != null)
+            if (dirty && user != null)
             {
-                Context.UserCollection.Update(UserId, _user);
+                Context.UserCollection.Update(UserId, user);
             }
         }
     }

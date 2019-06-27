@@ -36,7 +36,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                     awaitList.Add(ReplyAsync(emoji));
 
-                    inventory.Add(new Models.Emoji { Unicode = emoji, Transactions = new List<TransactionInfo>() });
+                    inventory.Add(new Models.Emoji { Unicode = emoji, Transactions = new List<TransactionInfo>() }, true);
                 }
 
                 Task.WaitAll(awaitList.ToArray());
