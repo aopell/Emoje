@@ -72,8 +72,7 @@ namespace DiscordHackWeek2019.Commands
 
         public string WhatDoICall(IUser user)
         {
-            var gu = user as IGuildUser;
-            return gu != null && !string.IsNullOrEmpty(gu.Nickname) ? gu.Nickname : user.Username;
+            return user is IGuildUser gu && !string.IsNullOrEmpty(gu.Nickname) ? gu.Nickname : user.Username;
         }
 
         public EmbedBuilder EmbedFromUser(IUser user) => new EmbedBuilder().WithAuthor(WhatDoICall(user), user.AvatarUrlOrDefaultAvatar());
