@@ -12,22 +12,22 @@ namespace DiscordHackWeek2019.Helpers
     {
         private static ObjectCache ReactionMessageCache = new MemoryCache("reactionMessages");
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, string, Task> defaultAction, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, string, Task> defaultAction, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
             var reactionMessage = new ReactionMessage(context, message, defaultAction, allowMultipleReactions);
-            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout) });
+            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout), RemovedCallback = onTimeout == null ? null : (CacheEntryRemovedCallback)(_ => onTimeout()) });
         }
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, Task> onPositiveResponse, Func<ReactionMessage, Task> onNegativeResponse, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, Task> onPositiveResponse, Func<ReactionMessage, Task> onNegativeResponse, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
             CreateReactionMessage(context, message, new Dictionary<string, Func<ReactionMessage, Task>>
             {
                 ["✅"] = onPositiveResponse,
                 ["❌"] = onNegativeResponse
-            }, allowMultipleReactions, timeout);
+            }, allowMultipleReactions, timeout, onTimeout);
         }
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Func<ReactionMessage, Task>> actions, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Func<ReactionMessage, Task>> actions, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
             foreach (string e in actions.Keys)
             {
@@ -35,7 +35,7 @@ namespace DiscordHackWeek2019.Helpers
             }
 
             var reactionMessage = new ReactionMessage(context, message, actions, allowMultipleReactions);
-            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout) });
+            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout), RemovedCallback = onTimeout == null ? null : (CacheEntryRemovedCallback)(_ => onTimeout()) });
         }
 
         public static ReactionMessage GetMessage(ulong id)
