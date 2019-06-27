@@ -58,5 +58,21 @@ namespace DiscordHackWeek2019.Commands.Modules
             var message = await ReplyAsync("Test multi generic reaction message");
             ReactionMessageHelper.CreateReactionMessage(Context, message, async (r, s) => await ReplyAsync($"[Multi] Received reaction {s}"), true);
         }
+
+        [Command("rarities")]
+        public async Task RaritiesMessage()
+        {
+            string message;
+            var emotes = Helpers.MarketHelper.GetRarities(Context, 0);
+            foreach (var rarity in Rarity.Rarities)
+            {
+                message = $"{rarity.Label}:\n";
+                foreach (var e in emotes[rarity])
+                {
+                    message += new Discord.Emoji(e);
+                }
+                await ReplyAsync(message);
+            }
+        }
     }
 }
