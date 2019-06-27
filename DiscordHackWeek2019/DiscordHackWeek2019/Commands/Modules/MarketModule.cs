@@ -71,10 +71,13 @@ namespace DiscordHackWeek2019.Commands.Modules
                         {
                             Unicode = emoji,
                             Owner = Context.User.Id,
-                            Transactions = null
+                            Transactions = new List<Models.TransactionInfo>()
                         };
-                        var added = MarketHelper.AddListing(Context, 0, toSell, price);
-                        await ReplyAsync($"Added a listing: {emoji}: ${added.Price}");
+
+                        toSell.EmojiId = Context.EmojiCollection.Insert(toSell);
+
+                        MarketHelper.AddListing(Context, 0, toSell, price);
+                        await ReplyAsync($"Added a listing: {emoji}: ${price}");
                     }, r => Task.CompletedTask);
             }
         }

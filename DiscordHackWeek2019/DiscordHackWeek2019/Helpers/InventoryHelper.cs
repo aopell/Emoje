@@ -29,7 +29,7 @@ namespace DiscordHackWeek2019.Helpers
         }
 
         private bool dirty = false;
-        private User user = null;
+        private User user;
         public User User
         {
             get
@@ -62,7 +62,18 @@ namespace DiscordHackWeek2019.Helpers
                 Context.EmojiCollection.Update(emoji);
             }
 
-            User.Inventory.GetValueOrDefault(emoji.Unicode, new List<Guid>()).Add(id);
+            List<Guid> list;
+            if (!User.Inventory.ContainsKey(emoji.Unicode))
+            {
+                list = new List<Guid>();
+                User.Inventory.Add(emoji.Unicode, list);
+            }
+            else
+            {
+                list = User.Inventory[emoji.Unicode];
+            }
+
+            list.Add(id);
             dirty = true;
         }
 
@@ -70,7 +81,7 @@ namespace DiscordHackWeek2019.Helpers
         {
             if (dirty && user != null)
             {
-                Context.UserCollection.Update(UserId, user);
+                Context.UserCollection.Update(user);
             }
         }
     }

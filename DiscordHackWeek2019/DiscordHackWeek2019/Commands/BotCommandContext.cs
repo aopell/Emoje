@@ -68,6 +68,8 @@ namespace DiscordHackWeek2019.Commands
             return u != null;
         }
 
+        public string WhatDoICall(ulong userId) => WhatDoICall(Guild.GetUser(userId));
+
         public string WhatDoICall(IUser user)
         {
             var gu = user as IGuildUser;
