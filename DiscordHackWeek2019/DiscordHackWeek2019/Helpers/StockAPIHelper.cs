@@ -14,8 +14,8 @@ namespace DiscordHackWeek2019.Helpers
 
         private static string GenerateQuoteUrl(string symbol) => $"https://sandbox.iexapis.com/stable/stock/{symbol}/quote?token={Token}";
 
-        private static ObjectCache StockCache => MemoryCache.Default;
-        private static readonly CacheItemPolicy Policy = new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
+        private static ObjectCache StockCache = new MemoryCache("stocks");
+        private static readonly CacheItemPolicy Policy = new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(5) };
 
         public static async Task<SymbolInfo> GetSymbolInfo(string symbol, SymbolType type = SymbolType.Stock)
         {

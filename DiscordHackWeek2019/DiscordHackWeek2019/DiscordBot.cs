@@ -71,9 +71,18 @@ namespace DiscordHackWeek2019
             return Task.CompletedTask;
         }
 
-        private Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> arg1, ISocketMessageChannel arg2, SocketReaction arg3)
+        private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketReaction reaction)
         {
-            return Task.CompletedTask;
+            var message = await cachedMessage.GetOrDownloadAsync();
+
+            if (message.Author.Id == Client.CurrentUser.Id && reaction.UserId != Client.CurrentUser.Id)
+            {
+                var reactionMessage = ReactionMessageHelper.GetMessage(message.Id);
+                if (reactionMessage != null)
+                {
+                    reactionMessage.RunAction(reaction.Emote);
+                }
+            }
         }
 
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
