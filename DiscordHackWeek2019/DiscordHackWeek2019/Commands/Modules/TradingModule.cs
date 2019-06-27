@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("trade")]
+    [Group("trade"), JoinRequired]
     public class TradingModule : ModuleBase<BotCommandContext>
     {
         [Command("offer"), Alias("create"), Summary("Create a trade offer to send to another user")]

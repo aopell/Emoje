@@ -3,27 +3,28 @@ using DiscordHackWeek2019.Helpers;
 using DiscordHackWeek2019.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("investments")]
+    [Group("investments"), JoinRequired]
     public class InvestmentModule : ModuleBase<BotCommandContext>
     {
         [Command("buy"), Alias("purchase", "order"), Summary("Invest in stock or cryptocurrency")]
         public async Task Buy(SymbolType type, string symbol, int amount = 1)
         {
-            if (amount == 0) throw new ArgumentException("Amount must be positive and nonzero");
+            symbol = symbol.ToLower();
+            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive and nonzero");
+
             var profile = Context.CallerProfile;
             var info = await StockAPIHelper.GetSymbolInfo(symbol, type);
-            if (profile.Currency < info.LatestPrice * amount)
-            {
-                throw new InvalidOperationException("You do not have enough currency to make this purchase");
-            }
 
-            Context.CallerProfile.Currency -= (int)(info.LatestPrice * amount);
-            var portfolio = type == SymbolType.Stock ? Context.CallerProfile.CurrentInvestments.Stocks : Context.CallerProfile.CurrentInvestments.Crypto;
+            if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
+
+            profile.Currency -= (int)(info.LatestPrice * amount);
+            var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
 
             if (!portfolio.Items.ContainsKey(symbol))
             {
@@ -35,31 +36,79 @@ namespace DiscordHackWeek2019.Commands.Modules
                 portfolio.Items[symbol].Add(new Investment { PurchasePrice = info.LatestPrice, PurchaseTimestamp = DateTimeOffset.Now });
             }
 
-            Context.UserCollection.Update(Context.CallerProfile);
+            Context.UserCollection.Update(profile);
 
-            await ReplyAsync($"Successfully purchased {amount}x{symbol} for {(int)(info.LatestPrice * amount)} currency. You now have {Context.CallerProfile.Currency} currency.");
+            await ReplyAsync($"Successfully purchased {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You now have {profile.Currency} currency.");
         }
 
 
-        [Command("sell"), Summary("Sell one of your investments")]
-        public Task Sell()
+        [Command("sell"), Summary("Sell one or more of your investments")]
+        public async Task Sell(SymbolType type, string symbol, int amount = 1)
         {
-            throw new NotImplementedException();
+            symbol = symbol.ToLower();
+            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive and nonzero");
+
+            var profile = Context.CallerProfile;
+            var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
+            var matching = portfolio.Items.GetValueOrDefault(symbol);
+
+            if (matching == null) throw new KeyNotFoundException("You don't have any investments with that symbol");
+            if (matching.Count < amount) throw new ArgumentOutOfRangeException(nameof(amount), $"You only have {matching.Count} investments but attempted to sell {amount}.");
+
+            var info = await StockAPIHelper.GetSymbolInfo(symbol, type);
+
+            var toSell = matching.OrderByDescending(x => Math.Abs(info.LatestPrice - x.PurchasePrice)).Take(amount).ToList();
+
+            int totalSellAmount = (int)(amount * info.LatestPrice);
+            int totalPurchaseAmount = (int)toSell.Sum(x => x.PurchasePrice);
+
+            var previousPortfolio = type == SymbolType.Stock ? profile.PreviousInvestments.Stocks : profile.PreviousInvestments.Crypto;
+            if (!previousPortfolio.Items.ContainsKey(symbol))
+            {
+                previousPortfolio.Items.Add(symbol, new List<Investment>());
+            }
+            var previousMatching = previousPortfolio.Items[symbol];
+
+            profile.Currency += totalSellAmount;
+            foreach (var inv in toSell)
+            {
+                matching.Remove(inv);
+                inv.SellPrice = info.LatestPrice;
+                inv.SellTimestamp = DateTimeOffset.Now;
+                previousMatching.Add(inv);
+            }
+
+            Context.UserCollection.Update(profile);
+
+            if (totalSellAmount > totalPurchaseAmount)
+            {
+                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You made a profit of {totalSellAmount - totalPurchaseAmount} currency! That's a {(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2} gain! You now have {profile.Currency} currency.");
+            }
+            else if (totalSellAmount < totalPurchaseAmount)
+            {
+                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You lost {Math.Abs(totalSellAmount - totalPurchaseAmount)} currency ({(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2}). You now have {profile.Currency} currency.");
+            }
+            else
+            {
+                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You broke even! You now have {profile.Currency} currency.");
+            }
         }
 
-        [Command("view"), Summary("View your current investment portfolio")]
+        [Command("view"), Summary("View your current investment portfolios")]
         public async Task View()
         {
             StringBuilder b = new StringBuilder();
-            b.AppendLine("Stocks");
+            b.AppendLine("**Stocks**");
             foreach (var kvp in Context.CallerProfile.CurrentInvestments.Stocks.Items)
             {
-                b.AppendLine($"{kvp.Value.Count}x{kvp.Key}");
+                if (kvp.Value.Count == 0) continue;
+                b.AppendLine($"{kvp.Value.Count}x{kvp.Key.ToUpper()}");
             }
-            b.AppendLine("Crypto");
+            b.AppendLine("**Crypto**");
             foreach (var kvp in Context.CallerProfile.CurrentInvestments.Crypto.Items)
             {
-                b.AppendLine($"{kvp.Value.Count}x{kvp.Key}");
+                if (kvp.Value.Count == 0) continue;
+                b.AppendLine($"{kvp.Value.Count}x{kvp.Key.ToUpper()}");
             }
             await ReplyAsync(b.ToString());
         }

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using LiteDB;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -54,8 +55,8 @@ namespace DiscordHackWeek2019.Commands.Modules
             embed.AddField("Unique Emoji", profile.Inventory.Count, true);
             embed.AddField("Owned Loot Boxes", profile.LootBoxes.Count, true);
             embed.AddField("Transactions Completed", profile.Transactions.Count, true);
-            embed.AddField("Unique Stocks", profile.CurrentInvestments.Stocks.Items.Count, true);
-            embed.AddField("Unique Cryptocurrencies", profile.CurrentInvestments.Crypto.Items.Count, true);
+            embed.AddField("Unique Stocks", profile.CurrentInvestments.Stocks.Items.Values.Count(x => x.Count > 0), true);
+            embed.AddField("Unique Cryptocurrencies", profile.CurrentInvestments.Crypto.Items.Values.Count(x => x.Count > 0), true);
 
             await ReplyAsync(embed: embed.Build());
         }

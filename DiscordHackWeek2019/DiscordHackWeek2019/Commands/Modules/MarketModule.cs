@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("market")]
+    [Group("market"), JoinRequired]
     public class MarketModule : ModuleBase<BotCommandContext>
     {
         [Group("global")]

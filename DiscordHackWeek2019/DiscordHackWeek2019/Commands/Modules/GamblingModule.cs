@@ -11,7 +11,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 {
     public class GamblingModule : ModuleBase<BotCommandContext>
     {
-        [Group("lootbox"), Alias("box", "lootboxes")]
+        [Group("lootbox"), Alias("box", "lootboxes"), JoinRequired]
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
             [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
