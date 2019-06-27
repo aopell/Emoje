@@ -85,9 +85,26 @@ namespace DiscordHackWeek2019
             if (message.Author.Id == Client.CurrentUser.Id && reaction.UserId != Client.CurrentUser.Id)
             {
                 var reactionMessage = ReactionMessageHelper.GetMessage(message.Id);
-                if (reactionMessage != null)
+                if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id)
                 {
-                    reactionMessage.RunAction(reaction.Emote);
+                    try
+                    {
+                        await reactionMessage.RunAction(reaction.Emote);
+                    }
+                    catch (Exception ex)
+                    {
+                        await channel.SendMessageAsync(ex.ToString());
+                    }
+
+                    if (reactionMessage.AllowMultipleReactions)
+                    {
+                        await message.RemoveReactionAsync(reaction.Emote, reactionMessage.Context.User);
+                    }
+                    else
+                    {
+                        await message.RemoveAllReactionsAsync();
+                        ReactionMessageHelper.Delete(reactionMessage);
+                    }
                 }
             }
         }

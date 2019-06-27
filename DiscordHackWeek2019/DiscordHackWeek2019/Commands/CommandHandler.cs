@@ -71,7 +71,17 @@ namespace DiscordHackWeek2019.Commands
             // as it may clog up the request queue should a user spam a
             // command.
             if (!result.IsSuccess)
+            {
+#if DEBUG
+                if (result.Error == CommandError.Exception && result is ExecuteResult eResult)
+                {
+                    await context.Channel.SendMessageAsync(eResult.Exception.ToString());
+                    return;
+                }
+#endif
                 await context.Channel.SendMessageAsync(result.ErrorReason);
+            }
+
         }
     }
 }

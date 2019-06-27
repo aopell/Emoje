@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Caching;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Helpers
 {
@@ -11,22 +12,22 @@ namespace DiscordHackWeek2019.Helpers
     {
         private static ObjectCache ReactionMessageCache = new MemoryCache("reactionMessages");
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Action<ReactionMessage, string> defaultAction, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, string, Task> defaultAction, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
             var reactionMessage = new ReactionMessage(context, message, defaultAction, allowMultipleReactions);
-            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout) });
+            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout), RemovedCallback = onTimeout == null ? null : (CacheEntryRemovedCallback)(_ => onTimeout()) });
         }
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Action<ReactionMessage> onPositiveResponse, Action<ReactionMessage> onNegativeResponse, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, Task> onPositiveResponse, Func<ReactionMessage, Task> onNegativeResponse, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
-            CreateReactionMessage(context, message, new Dictionary<string, Action<ReactionMessage>>
+            CreateReactionMessage(context, message, new Dictionary<string, Func<ReactionMessage, Task>>
             {
                 ["✅"] = onPositiveResponse,
                 ["❌"] = onNegativeResponse
-            }, allowMultipleReactions, timeout);
+            }, allowMultipleReactions, timeout, onTimeout);
         }
 
-        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Action<ReactionMessage>> actions, bool allowMultipleReactions = false, int timeout = 300000)
+        public static void CreateReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Func<ReactionMessage, Task>> actions, bool allowMultipleReactions = false, int timeout = 300000, Action onTimeout = null)
         {
             foreach (string e in actions.Keys)
             {
@@ -34,21 +35,19 @@ namespace DiscordHackWeek2019.Helpers
             }
 
             var reactionMessage = new ReactionMessage(context, message, actions, allowMultipleReactions);
-            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout) });
+            ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout), RemovedCallback = onTimeout == null ? null : (CacheEntryRemovedCallback)(_ => onTimeout()) });
         }
 
         public static ReactionMessage GetMessage(ulong id)
         {
             if (!ReactionMessageCache.Contains(id.ToString())) return null;
 
-            var reactionMessage = ReactionMessageCache.Get(id.ToString()) as ReactionMessage;
+            return ReactionMessageCache.Get(id.ToString()) as ReactionMessage;
+        }
 
-            if (!reactionMessage.AllowMultipleReactions)
-            {
-                ReactionMessageCache.Remove(id.ToString());
-            }
-
-            return reactionMessage;
+        public static void Delete(ReactionMessage reactionMessage)
+        {
+            ReactionMessageCache.Remove(reactionMessage.Message.ToString());
         }
     }
 
@@ -58,10 +57,10 @@ namespace DiscordHackWeek2019.Helpers
         public IUserMessage Message { get; }
         public bool AllowMultipleReactions { get; }
         public bool AcceptsAllReactions { get; }
-        private Action<ReactionMessage, string> DefaultAction { get; }
-        private Dictionary<string, Action<ReactionMessage>> Actions { get; }
+        private Func<ReactionMessage, string, Task> DefaultAction { get; }
+        private Dictionary<string, Func<ReactionMessage, Task>> Actions { get; }
 
-        public ReactionMessage(BotCommandContext context, IUserMessage message, Action<ReactionMessage, string> defaultAction, bool allowMultipleReactions = false)
+        public ReactionMessage(BotCommandContext context, IUserMessage message, Func<ReactionMessage, string, Task> defaultAction, bool allowMultipleReactions = false)
         {
             Context = context;
             Message = message;
@@ -70,7 +69,7 @@ namespace DiscordHackWeek2019.Helpers
             AcceptsAllReactions = true;
         }
 
-        public ReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Action<ReactionMessage>> actions, bool allowMultipleReactions = false)
+        public ReactionMessage(BotCommandContext context, IUserMessage message, Dictionary<string, Func<ReactionMessage, Task>> actions, bool allowMultipleReactions = false)
         {
             Context = context;
             Message = message;
@@ -79,16 +78,16 @@ namespace DiscordHackWeek2019.Helpers
             AcceptsAllReactions = false;
         }
 
-        public void RunAction(IEmote reaction)
+        public async Task RunAction(IEmote reaction)
         {
             string text = reaction.ToString();
             if (AcceptsAllReactions)
             {
-                DefaultAction(this, text);
+                await DefaultAction(this, text);
             }
             else if (Actions.ContainsKey(text))
             {
-                Actions[text](this);
+                await Actions[text](this);
             }
         }
     }
