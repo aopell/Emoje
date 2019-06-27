@@ -34,7 +34,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         {
             var emoji = input.Split(' ');
             var message = await ReplyAsync("Select a reaction");
-            ReactionMessageHelper.CreateReactionMessage(Context, message, emoji.Select(x => new KeyValuePair<string, Action<ReactionMessage>>(x, async r => await ReplyAsync($"{x} selected"))).ToDictionary(x => x.Key, x => x.Value));
+            ReactionMessageHelper.CreateReactionMessage(Context, message, emoji.Select(x => new KeyValuePair<string, Func<ReactionMessage, Task>>(x, async r => await ReplyAsync($"{x} selected"))).ToDictionary(x => x.Key, x => x.Value));
         }
 
         [Command("multicustom")]
@@ -42,7 +42,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         {
             var emoji = input.Split(' ');
             var message = await ReplyAsync("Select one or more reactions");
-            ReactionMessageHelper.CreateReactionMessage(Context, message, emoji.Select(x => new KeyValuePair<string, Action<ReactionMessage>>(x, async r => await ReplyAsync($"{x} selected"))).ToDictionary(x => x.Key, x => x.Value), true);
+            ReactionMessageHelper.CreateReactionMessage(Context, message, emoji.Select(x => new KeyValuePair<string, Func<ReactionMessage, Task>>(x, async r => await ReplyAsync($"{x} selected"))).ToDictionary(x => x.Key, x => x.Value), true);
         }
 
         [Command("repeat")]

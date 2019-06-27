@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using LiteDB;
+using System.Drawing;
 
 namespace DiscordHackWeek2019.Helpers
 {

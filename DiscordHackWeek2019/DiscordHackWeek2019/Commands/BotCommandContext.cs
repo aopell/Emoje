@@ -14,6 +14,10 @@ namespace DiscordHackWeek2019.Commands
     {
         public DiscordBot Bot { get; set; }
 
+        private LiteCollection<User> _userCollection;
+
+        private LiteCollection<Models.Emoji> _emojiCollection;
+
         private User _user = null;
         private User CurrentUser => _user ?? (_user = UserCollection.GetById(User.Id));
 
@@ -21,12 +25,12 @@ namespace DiscordHackWeek2019.Commands
         {
             get
             {
-                if (userCollection == null)
+                if (_userCollection == null)
                 {
-                    userCollection = Bot.DataProvider.GetCollection<User>("users");
+                    _userCollection = Bot.DataProvider.GetCollection<User>("users");
                 }
 
-                return userCollection;
+                return _userCollection;
             }
         }
 
@@ -34,12 +38,12 @@ namespace DiscordHackWeek2019.Commands
         {
             get
             {
-                if (emojiCollection == null)
+                if (_emojiCollection == null)
                 {
-                    emojiCollection = Bot.DataProvider.GetCollection<Models.Emoji>("emoji");
+                    _emojiCollection = Bot.DataProvider.GetCollection<Models.Emoji>("emoji");
                 }
 
-                return emojiCollection;
+                return _emojiCollection;
             }
         }
 
@@ -69,9 +73,12 @@ namespace DiscordHackWeek2019.Commands
         public InventoryWrapper GetInventory(IUser user) => GetInventory(user.Id);
         public InventoryWrapper GetInventory(ulong user) => new InventoryWrapper(this, user);
 
-        private LiteCollection<User> userCollection;
-
-        private LiteCollection<Models.Emoji> emojiCollection;
+        public void ClearCachedValues()
+        {
+            _user = null;
+            _userCollection = null;
+            _emojiCollection = null;
+        }
 
         public BotCommandContext(DiscordSocketClient client, SocketUserMessage msg, DiscordBot bot) : base(client, msg)
         {

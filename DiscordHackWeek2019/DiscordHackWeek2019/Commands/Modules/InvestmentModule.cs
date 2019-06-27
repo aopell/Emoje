@@ -9,10 +9,10 @@ using System.Threading.Tasks;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("investments"), JoinRequired]
+    [Group("invest"), Alias("investments"), JoinRequired]
     public class InvestmentModule : ModuleBase<BotCommandContext>
     {
-        [Command("buy"), Alias("purchase", "order"), Summary("Invest in stock or cryptocurrency")]
+        [Command("in"), Alias("buy", "purchase", "order"), Summary("Invest in stock or cryptocurrency")]
         public async Task Buy(SymbolType type, string symbol, int amount = 1)
         {
             symbol = symbol.ToLower();
@@ -23,22 +23,36 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
 
-            profile.Currency -= (int)(info.LatestPrice * amount);
-            var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
+            ReactionMessageHelper.CreateReactionMessage(Context, await ReplyAsync($"Purchase {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You currently have {profile.Currency} currency."), onPurchase, onReject, false, 30000);
 
-            if (!portfolio.Items.ContainsKey(symbol))
+            async Task onPurchase(ReactionMessage m)
             {
-                portfolio.Items.Add(symbol, new List<Investment>());
+                Context.ClearCachedValues();
+                profile = Context.CallerProfile;
+                if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
+
+                profile.Currency -= (int)(info.LatestPrice * amount);
+                var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
+
+                if (!portfolio.Items.ContainsKey(symbol))
+                {
+                    portfolio.Items.Add(symbol, new List<Investment>());
+                }
+
+                for (int i = 0; i < amount; i++)
+                {
+                    portfolio.Items[symbol].Add(new Investment { PurchasePrice = info.LatestPrice, PurchaseTimestamp = DateTimeOffset.Now });
+                }
+
+                Context.UserCollection.Update(profile);
+
+                await m.Message.ModifyAsync(properties => properties.Content = $"Successfully purchased {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You now have {profile.Currency} currency.");
             }
 
-            for (int i = 0; i < amount; i++)
+            async Task onReject(ReactionMessage m)
             {
-                portfolio.Items[symbol].Add(new Investment { PurchasePrice = info.LatestPrice, PurchaseTimestamp = DateTimeOffset.Now });
+                await m.Message.ModifyAsync(properties => properties.Content = "Purchase canceled");
             }
-
-            Context.UserCollection.Update(profile);
-
-            await ReplyAsync($"Successfully purchased {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You now have {profile.Currency} currency.");
         }
 
 
@@ -57,44 +71,62 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             var info = await StockAPIHelper.GetSymbolInfo(symbol, type);
 
-            var toSell = matching.OrderByDescending(x => Math.Abs(info.LatestPrice - x.PurchasePrice)).Take(amount).ToList();
-
             int totalSellAmount = (int)(amount * info.LatestPrice);
-            int totalPurchaseAmount = (int)toSell.Sum(x => x.PurchasePrice);
 
-            var previousPortfolio = type == SymbolType.Stock ? profile.PreviousInvestments.Stocks : profile.PreviousInvestments.Crypto;
-            if (!previousPortfolio.Items.ContainsKey(symbol))
-            {
-                previousPortfolio.Items.Add(symbol, new List<Investment>());
-            }
-            var previousMatching = previousPortfolio.Items[symbol];
+            ReactionMessageHelper.CreateReactionMessage(Context, await ReplyAsync($"Sell {amount} x {symbol.ToUpper()} for {totalSellAmount} currency?"), onSell, onReject, false, 30000);
 
-            profile.Currency += totalSellAmount;
-            foreach (var inv in toSell)
+            async Task onSell(ReactionMessage m)
             {
-                matching.Remove(inv);
-                inv.SellPrice = info.LatestPrice;
-                inv.SellTimestamp = DateTimeOffset.Now;
-                previousMatching.Add(inv);
+                Context.ClearCachedValues();
+                profile = Context.CallerProfile;
+                portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
+                matching = portfolio.Items.GetValueOrDefault(symbol);
+
+                if (matching == null) throw new KeyNotFoundException("You don't have any investments with that symbol");
+                if (matching.Count < amount) throw new ArgumentOutOfRangeException(nameof(amount), $"You only have {matching.Count} investments but attempted to sell {amount}.");
+
+                var toSell = matching.OrderByDescending(x => Math.Abs(info.LatestPrice - x.PurchasePrice)).Take(amount).ToList();
+                int totalPurchaseAmount = (int)toSell.Sum(x => x.PurchasePrice);
+
+                var previousPortfolio = type == SymbolType.Stock ? profile.PreviousInvestments.Stocks : profile.PreviousInvestments.Crypto;
+                if (!previousPortfolio.Items.ContainsKey(symbol))
+                {
+                    previousPortfolio.Items.Add(symbol, new List<Investment>());
+                }
+                var previousMatching = previousPortfolio.Items[symbol];
+
+                profile.Currency += totalSellAmount;
+                foreach (var inv in toSell)
+                {
+                    matching.Remove(inv);
+                    inv.SellPrice = info.LatestPrice;
+                    inv.SellTimestamp = DateTimeOffset.Now;
+                    previousMatching.Add(inv);
+                }
+
+                Context.UserCollection.Update(profile);
+
+                if (totalSellAmount > totalPurchaseAmount)
+                {
+                    await m.Message.ModifyAsync(p => p.Content = $"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You made a profit of {totalSellAmount - totalPurchaseAmount} currency! That's a {(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2} gain! You now have {profile.Currency} currency.");
+                }
+                else if (totalSellAmount < totalPurchaseAmount)
+                {
+                    await m.Message.ModifyAsync(p => p.Content = $"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You lost {Math.Abs(totalSellAmount - totalPurchaseAmount)} currency ({(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2}). You now have {profile.Currency} currency.");
+                }
+                else
+                {
+                    await m.Message.ModifyAsync(p => p.Content = $"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You broke even! You now have {profile.Currency} currency.");
+                }
             }
 
-            Context.UserCollection.Update(profile);
-
-            if (totalSellAmount > totalPurchaseAmount)
+            async Task onReject(ReactionMessage m)
             {
-                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You made a profit of {totalSellAmount - totalPurchaseAmount} currency! That's a {(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2} gain! You now have {profile.Currency} currency.");
-            }
-            else if (totalSellAmount < totalPurchaseAmount)
-            {
-                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You lost {Math.Abs(totalSellAmount - totalPurchaseAmount)} currency ({(totalSellAmount - totalPurchaseAmount) / (double)totalPurchaseAmount:P2}). You now have {profile.Currency} currency.");
-            }
-            else
-            {
-                await ReplyAsync($"You sold {amount} x {symbol.ToUpper()} for {totalSellAmount} currency. You broke even! You now have {profile.Currency} currency.");
+                await m.Message.ModifyAsync(p => p.Content = "Sale canceled");
             }
         }
 
-        [Command("view"), Summary("View your current investment portfolios")]
+        [Command, Summary("View your current investment portfolios")]
         public async Task View()
         {
             StringBuilder b = new StringBuilder();
