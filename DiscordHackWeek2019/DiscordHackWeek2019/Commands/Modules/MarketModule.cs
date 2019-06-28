@@ -56,7 +56,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (price > money)
             {
-                await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you need ${price - money} more to buy {emoji}");
+                await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you need {Context.Money(price - money)} more to buy {emoji}");
                 return;
             }
 
@@ -71,17 +71,17 @@ namespace DiscordHackWeek2019.Commands.Modules
         {
             if (!EmojiHelper.IsValidEmoji(emoji))
             {
-                await ReplyAsync($"{emoji} cannot be bought or sold.");
+                await ReplyAsync($"{emoji} cannot be bought or sold");
                 return;
             }
 
             if (price <= 0)
             {
-                await ReplyAsync("Please enter in a valid price");
+                await ReplyAsync($"You can't sell things for {(price == 0 ? "" : "less than ")} no money");
                 return;
             }
 
-            var message = await ReplyAsync($"Are you sure you want to sell {emoji} for ${price}?");
+            var message = await ReplyAsync($"Are you sure you want to sell {emoji} for {Context.Money(price)}?");
             ReactionMessageHelper.CreateReactionMessage(Context, message,
                 async r =>
                 {
@@ -96,7 +96,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     toSell.EmojiId = Context.EmojiCollection.Insert(toSell);
 
                     MarketHelper.AddListing(Context, MarketId(market), toSell, price);
-                    await ReplyAsync($"Added a listing: {emoji}: ${price}");
+                    await ReplyAsync($"Posted your {emoji} for {Context.Money(price)}");
                 }, r => Task.CompletedTask);
         }
     }

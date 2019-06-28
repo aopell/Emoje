@@ -41,14 +41,14 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 string text;
 
-                if (count > actualCount) text = $"{Context.User.Mention}, you can only afford {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")}, do you still want to purchase {(actualCount == 1 ? "it" : "them")} for {cost}?";
-                else text = $"{Context.User.Mention}, are you sure you want to buy {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {cost}?";
+                if (count > actualCount) text = $"{Context.User.Mention}, you can only afford {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")}, do you still want to purchase {(actualCount == 1 ? "it" : "them")} for {Context.Money(cost)}?";
+                else text = $"{Context.User.Mention}, are you sure you want to buy {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
                 ReactionMessageHelper.CreateReactionMessage(Context, message,
                     async onOkay =>
                     {
-                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {cost}");
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
                         inventory.AddLoot(type, actualCount);
 
@@ -70,6 +70,13 @@ namespace DiscordHackWeek2019.Commands.Modules
                     await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
                     return;
                 }
+
+                if (count > 5)
+                {
+                    count = 5;
+                    await ReplyAsync("You can only open 5 boxes at a time!");
+                }
+
                 var inventory = Context.GetInventory(Context.User);
                 var variety = LootBoxHelper.GetAllLootBoxes(Context)[type];
 
@@ -77,6 +84,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 if (available >= count)
                 {
+                    inventory.RemoveBoxes(type, count);
                     var open = Open(inventory, variety, count);
                     
                     return;
@@ -97,15 +105,16 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 string text;
 
-                if (needToBuy > canBuy) text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")} right now, and you can only afford {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")}, do you still want to purchase {(canBuy == 1 ? "it" : "them")} for {cost} and open {(toOpen == 1 ? "one" : toOpen.ToString())}?";
-                else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {cost} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+                if (needToBuy > canBuy) text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")} right now, and you can only afford {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")}, do you still want to purchase {(canBuy == 1 ? "it" : "them")} for {Context.Money(cost)} and open {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+                else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
                 ReactionMessageHelper.CreateReactionMessage(Context, message,
                     async onOkay =>
                     {
-                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {cost}");
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
+                        inventory.RemoveBoxes(type, available);
 
                         await Open(inventory, variety, toOpen);
                         await modify;
@@ -139,8 +148,6 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 StringBuilder message = new StringBuilder();
 
-                var toWait = new List<Task>();
-
                 for (int i = 0; i < count; i++)
                 {
                     foreach (var (rarity, emoji) in variety.Open(Context.Bot, 0))
@@ -157,18 +164,11 @@ namespace DiscordHackWeek2019.Commands.Modules
                         message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket}");
                     }
                     message.AppendLine();
-
-                    if (i != 0 && i % 4 == 0)
-                    {
-                        toWait.Add(ReplyAsync(message.ToString()));
-                        message.Clear();
-                    }
                 }
 
-                if (message.Length > 0) toWait.Add(ReplyAsync(message.ToString()));
-
+                var reply = ReplyAsync(message.ToString());
                 inventory.Save();
-                Task.WaitAll(toWait.ToArray());
+                await reply;
             }
         }
     }
