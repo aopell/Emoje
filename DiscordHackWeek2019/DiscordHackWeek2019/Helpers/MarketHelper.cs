@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using OneOf;
+using System.Threading.Tasks.Dataflow;
 
 namespace DiscordHackWeek2019.Helpers
 {
@@ -20,7 +21,7 @@ namespace DiscordHackWeek2019.Helpers
 
             Listing toAdd = new Listing
             {
-                UserId = context.User.Id,
+                SellerId = context.User.Id,
                 EmojiId = emoji.EmojiId,
                 Price = price,
                 Timestamp = DateTimeOffset.Now
@@ -70,20 +71,14 @@ namespace DiscordHackWeek2019.Helpers
         }
 
         // Get a dictionary of rarities from rarity to a list of emojis for the given market
-        // Returns null if the market does not exist
         public static Dictionary<Rarity, List<string>> GetRarities(DiscordBot bot, ulong marketId)
         {
             // Make sure market exists
             var marketsDB = bot.DataProvider.GetCollection<Market>("markets");
-            var market = marketsDB.GetById(marketId);
-            if (market == null)
-            {
-                // Market does not exist
-                return null;
-            }
+            var market = GetOrCreate(marketsDB, marketId, true);
 
-            List<KeyValuePair<int, string>> prices = new List<KeyValuePair<int, string>>();
-            foreach (string key in Helpers.EmojiHelper.IterateAllEmoji)
+            List <KeyValuePair<int, string>> prices = new List<KeyValuePair<int, string>>();
+            foreach (string key in EmojiHelper.IterateAllEmoji)
             {
                 if (market.Listings.ContainsKey(key) && market.Listings[key].Count > 0)
                 {
@@ -123,6 +118,25 @@ namespace DiscordHackWeek2019.Helpers
             }
 
             return result;
+        }
+
+        public static Market GetOrCreate(LiteDB.LiteCollection<Market> marketDB, ulong marketId, bool insertIfNew = false)
+        {
+            var market = marketDB.GetById(marketId);
+
+            if (market == null)
+            {
+                market = new Market
+                {
+                    MarketId = marketId,
+                    Transactions = new List<Transaction>(),
+                    Listings = new Dictionary<string, List<Listing>>()
+                };
+
+                if (insertIfNew) marketDB.Insert(market);
+            }
+
+            return market;
         }
 
         private static Listing CheapestListing(List<Listing> listings)
@@ -169,11 +183,17 @@ namespace DiscordHackWeek2019.Helpers
         }
     }
 
+    public struct NewTransaction
+    {
+        public Transaction Transaction { get; set; }
+        public BufferBlock<TransactionInfo> IdCallback { get; set; }
+    }
+
     public class Clerk
     {
         private readonly Thread Thread;
 
-        private readonly BlockingCollection<OneOf<PostListing, Purchase, Transaction>> ToProcess = new BlockingCollection<OneOf<PostListing, Purchase, Transaction>>(new ConcurrentQueue<OneOf<PostListing, Purchase, Transaction>>());
+        private readonly BlockingCollection<OneOf<PostListing, Purchase, NewTransaction>> ToProcess = new BlockingCollection<OneOf<PostListing, Purchase, NewTransaction>>(new ConcurrentQueue<OneOf<PostListing, Purchase, NewTransaction>>());
 
         public Clerk()
         {
@@ -181,7 +201,24 @@ namespace DiscordHackWeek2019.Helpers
             Thread.Start();
         }
 
-        public void Queue(OneOf<PostListing, Purchase, Transaction> listing)
+        /// <summary>
+        /// Queues the processing of a Transaction and returns a way to get the transaction Id
+        /// </summary>
+        /// <param name="listing"></param>
+        /// <returns></returns>
+        public BufferBlock<TransactionInfo> Queue(Transaction listing)
+        {
+            var buffer = new BufferBlock<TransactionInfo>();
+            Queue(new NewTransaction
+            {
+                Transaction = listing,
+                IdCallback = buffer,
+            });
+
+            return buffer;
+        }
+
+        public void Queue(OneOf<PostListing, Purchase, NewTransaction> listing)
         {
             ToProcess.Add(listing);
         }
@@ -195,7 +232,7 @@ namespace DiscordHackWeek2019.Helpers
                 thing.Switch(
                     newListing =>
                     {
-                        var market = GetOrCreate(marketDB, newListing.MarketId);
+                        var market = MarketHelper.GetOrCreate(marketDB, newListing.MarketId);
 
                         if (newListing.IsNew) newListing.Listing.Timestamp = DateTimeOffset.Now;
 
@@ -216,7 +253,7 @@ namespace DiscordHackWeek2019.Helpers
                     },
                     purchase =>
                     {
-                        var market = GetOrCreate(marketDB, purchase.MarketId);
+                        var market = MarketHelper.GetOrCreate(marketDB, purchase.MarketId);
 
                         if (market.Listings.TryGetValue(purchase.Emoji, out var listings) && listings.Count() != 0)
                         {
@@ -229,35 +266,23 @@ namespace DiscordHackWeek2019.Helpers
                             ProcessPurchase(purchase, lowest);
                         }
                     },
-                    transaction =>
+                    trans =>
                     {
-                        var market = GetOrCreate(marketDB, transaction.MarketId);
+                        var market = MarketHelper.GetOrCreate(marketDB, trans.Transaction.MarketId);
 
-                        transaction.Timestamp = DateTimeOffset.Now;
-                        market.Transactions.Add(transaction);
+                        trans.Transaction.Timestamp = DateTimeOffset.Now;
+
+                        ulong newId = (ulong) market.Transactions.LongCount();
+                        trans.Transaction.TransactionId = newId;
+
+                        market.Transactions.Add(trans.Transaction);
 
                         marketDB.Upsert(market);
+
+                        trans.IdCallback.Post(trans.Transaction.GetInfo());
                     }
                 );
             }
-        }
-
-        private Market GetOrCreate(LiteDB.LiteCollection<Market> marketDB, ulong marketId)
-        {
-            var market = marketDB.GetById(marketId);
-
-            if (market == null)
-            {
-                // Market does not exist, so make a new one
-                return new Market
-                {
-                    MarketId = marketId,
-                    Transactions = new List<Transaction>(),
-                    Listings = new Dictionary<string, List<Listing>>()
-                };
-            }
-
-            return market;
         }
 
         private async Task ProcessPurchase(Purchase purchase, Listing listing)
@@ -272,7 +297,7 @@ namespace DiscordHackWeek2019.Helpers
 
                 var buyerProfile = ctx.UserCollection.GetById(purchase.BuyerId);
 
-                if (listing.UserId == buyer.Id)
+                if (listing.SellerId == buyer.Id)
                 {
                     buyer.GetOrCreateDMChannelAsync().ContinueWith(async task =>
                     {
@@ -283,7 +308,7 @@ namespace DiscordHackWeek2019.Helpers
                 }
                 else
                 {
-                    var seller = ctx.Bot.Client.GetUser(listing.UserId);
+                    var seller = ctx.Bot.Client.GetUser(listing.SellerId);
                     var sellerProfile = ctx.GetProfile(seller);
 
                     buyerProfile.Currency -= listing.Price;
@@ -302,18 +327,9 @@ namespace DiscordHackWeek2019.Helpers
 
                 var market = ctx.MarketCollection.GetById(purchase.MarketId);
 
-                var trans = new Transaction
-                {
-                    TransactionId = Guid.NewGuid(),
-                    MarketId = purchase.MarketId,
-                    From = listing.UserId,
-                    To = purchase.BuyerId,
-                    Amount = listing.Price,
-                };
+                var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId);
 
-                Queue(trans);
-
-                emoji.Transactions.Add(trans.GetInfo());
+                emoji.Transactions.Add(Queue(trans).Receive());
                 emoji.Owner = purchase.BuyerId;
 
                 // The inventory wrapper will handle saving for us

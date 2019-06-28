@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
 using DiscordHackWeek2019.Helpers;
+using System.Threading.Tasks.Dataflow;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -19,7 +20,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             public async Task Buy(int count = 1, string type = "normal")
             {
                 // Limit count
-                if(count > 5 || count < 1)
+                if (count > 5 || count < 1)
                 {
                     await ReplyAsync("You can only open up to 5 loot boxes at a time.");
                     return;
@@ -28,14 +29,21 @@ namespace DiscordHackWeek2019.Commands.Modules
                 StringBuilder message = new StringBuilder();
                 var inventory = Context.GetInventory(Context.User);
 
+                var variety = LootBoxHelper.LootBoxVarieties[type];
+
                 for (int i = 0; i < count; i++)
                 {
-                    var result = LootBoxHelper.LootBoxVarieties[type].Open(Context.Bot, 0);
-
-                    foreach (var (rarity, emoji) in result)
+                    foreach (var (rarity, emoji) in variety.Open(Context.Bot, 0))
                     {
-                        // TODO: Add transaction showing this is from a lootbox
-                        inventory.Add(new Models.Emoji { Owner = Context.User.Id, Transactions = new List<TransactionInfo>() { }, Unicode = emoji });
+                        var trans = Transaction.FromLootbox(marketId: 0, buyer: inventory.UserId, type);
+
+                        inventory.Add(new Models.Emoji
+                        {
+                            Owner = Context.User.Id,
+                            Transactions = new List<TransactionInfo>() { Context.Bot.Clerk.Queue(trans).Receive() },
+                            Unicode = emoji
+                        });
+
                         message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket} ");
                     }
                     message.AppendLine();
@@ -47,9 +55,9 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
 
             [Command("open"), Summary("Open a lootbox")]
-            public Task Open(string type = null)
+            public async Task Open(int count = 1, string type = null)
             {
-                throw new NotImplementedException();
+                
             }
 
             [Command("view"), Summary("View your currently owned loot boxes")]
