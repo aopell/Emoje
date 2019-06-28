@@ -83,8 +83,9 @@ namespace DiscordHackWeek2019.Helpers
             dirty = true;
         }
 
-        public void AddLootbox(string variety, int count = 1) => AddLootbox(variety, (uint) count);
-        public void AddLootbox(string variety, uint count = 1)
+        public int GetNumLootBoxes(string variety) => User.LootBoxes.GetValueOrDefault<string, int>(variety, 0);
+
+        public void AddLoot(string variety, int count = 1)
         {
             if (User.LootBoxes.ContainsKey(variety))
             {
@@ -93,6 +94,21 @@ namespace DiscordHackWeek2019.Helpers
             else
             {
                 User.LootBoxes.Add(variety, count);
+            }
+
+            dirty = true;
+        }
+
+        public void RemoveBoxes(string variety, int count = 1)
+        {
+            if (User.LootBoxes.ContainsKey(variety))
+            {
+                User.LootBoxes[variety] -= count;
+            }
+            else
+            {
+                User.LootBoxes.Add(variety, 0);
+                throw new InvalidOperationException("Cannot remove lootboxes that don't exist!!! Check your code!!!");
             }
 
             dirty = true;

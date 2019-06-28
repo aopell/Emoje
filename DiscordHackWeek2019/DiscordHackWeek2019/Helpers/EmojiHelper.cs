@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Helpers
 {
@@ -7,10 +9,10 @@ namespace DiscordHackWeek2019.Helpers
     {
         public static IReadOnlyCollection<string> IterateAllEmoji { get => EmojiToName.Keys; }
 
-        private static readonly Dictionary<string, string> EmojiToName = new Dictionary<string, string>();
+        private static Dictionary<string, string> EmojiToName = new Dictionary<string, string>();
         private static readonly Dictionary<string, string> NameToEmoji = new Dictionary<string, string>();
 
-        public static void Initialize(string emojiTableName)
+        public static void Initialize(string emojiTableName, Random random)
         {
             using (var emojiTable = new StreamReader(File.OpenRead(emojiTableName)))
             {
@@ -22,6 +24,8 @@ namespace DiscordHackWeek2019.Helpers
                     NameToEmoji[name] = emoji;
                 }
             }
+
+            EmojiToName = EmojiToName.ToList().OrderBy(kv => random.Next()).ToDictionary(kv => kv.Key, kv => kv.Value);
         }
 
         public static string GetNameFromEmoji(string emoji) => EmojiToName[emoji];
