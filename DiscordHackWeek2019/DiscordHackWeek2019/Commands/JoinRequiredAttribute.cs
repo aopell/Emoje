@@ -14,10 +14,15 @@ namespace DiscordHackWeek2019.Commands
             {
                 if (botContext.UserJoined(botContext.User.Id))
                 {
-                    return Task.FromResult(PreconditionResult.FromSuccess());
+                    if (botContext.UserEnabled(botContext.User.Id))
+                    {
+                        return Task.FromResult(PreconditionResult.FromSuccess());
+                    }
+
+                    return Task.FromResult(PreconditionResult.FromError(Strings.UserDisabled));
                 }
 
-                return Task.FromResult(PreconditionResult.FromError(Strings.UserJoinNeeded));
+                return Task.FromResult(PreconditionResult.FromError(Strings.UserJoinNeeded(context.User)));
             }
 
             return Task.FromResult(PreconditionResult.FromError(new InvalidOperationException()));

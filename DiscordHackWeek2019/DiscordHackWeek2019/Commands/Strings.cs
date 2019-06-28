@@ -7,7 +7,8 @@ namespace DiscordHackWeek2019.Commands
     public static class Strings
     {
         // Messages
-        public const string UserJoinNeeded = "The given user has not joined";
+        public static string UserJoinNeeded(Discord.IUser u) { return $"{u.Mention}, try joining with `+join` first!"; }
+        public const string UserDisabled = "Sorry, but you do not have permission to use the bot";
 
         // Emoji
         public const string moneyEmoji = "<:money:593606876051013678>";
@@ -18,8 +19,8 @@ namespace DiscordHackWeek2019.Commands
         public const string cryptoEmoji = "<:crypto:593603698513412098>";
 
         // Rarities
-        public const string commonLeft = "<:common_l:593689834778918937>";
-        public const string commonRight = "<:common_r:593690111435341827>";
+        public const string commonLeft = "<:common_l:593993338261078026>";
+        public const string commonRight = "<:common_r:593993401414975499>";
         public const string rareLeft = "<:rare_l:593689863275020288>";
         public const string rareRight = "<:rare_r:593690111951241236>";
         public const string epicLeft = "<:epic_l:593689846921429026>";
