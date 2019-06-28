@@ -45,7 +45,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 else text = $"{Context.User.Mention}, are you sure you want to buy {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
-                ReactionMessageHelper.CreateReactionMessage(Context, message,
+                ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                     async onOkay =>
                     {
                         var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}");
@@ -109,7 +109,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
-                ReactionMessageHelper.CreateReactionMessage(Context, message,
+                ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                     async onOkay =>
                     {
                         var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");

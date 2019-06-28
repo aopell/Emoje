@@ -23,7 +23,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
 
-            ReactionMessageHelper.CreateReactionMessage(Context, await ReplyAsync($"Purchase {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You currently have {profile.Currency} currency."), onPurchase, onReject, false, 30000);
+            ReactionMessageHelper.CreateConfirmReactionMessage(Context, await ReplyAsync($"Purchase {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You currently have {profile.Currency} currency."), onPurchase, onReject, false, 30000);
 
             async Task onPurchase(ReactionMessage m)
             {
@@ -73,7 +73,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             int totalSellAmount = (int)(amount * info.LatestPrice);
 
-            ReactionMessageHelper.CreateReactionMessage(Context, await ReplyAsync($"Sell {amount} x {symbol.ToUpper()} for {totalSellAmount} currency?"), onSell, onReject, false, 30000);
+            ReactionMessageHelper.CreateConfirmReactionMessage(Context, await ReplyAsync($"Sell {amount} x {symbol.ToUpper()} for {totalSellAmount} currency?"), onSell, onReject, false, 30000);
 
             async Task onSell(ReactionMessage m)
             {

@@ -1,3 +1,4 @@
+using Discord;
 using Discord.Commands;
 using DiscordHackWeek2019.Helpers;
 using System;
@@ -26,7 +27,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task ConfirmMessage()
         {
             var message = await ReplyAsync("Test confirm message");
-            ReactionMessageHelper.CreateReactionMessage(Context, message, async r => await ReplyAsync("Positive response received"), async r => await ReplyAsync("Negative response received"));
+            ReactionMessageHelper.CreateConfirmReactionMessage(Context, message, async r => await ReplyAsync("Positive response received"), async r => await ReplyAsync("Negative response received"));
         }
 
         [Command("custom")]
@@ -49,14 +50,14 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task ReactionMessage()
         {
             var message = await ReplyAsync("Test generic reaction message");
-            ReactionMessageHelper.CreateReactionMessage(Context, message, async (r, s) => await ReplyAsync($"Received reaction {s}"));
+            ReactionMessageHelper.CreateCustomReactionMessage(Context, message, async (r, s) => await ReplyAsync($"Received reaction {s}"));
         }
 
         [Command("multirepeat")]
         public async Task MultiReactionMessage()
         {
             var message = await ReplyAsync("Test multi generic reaction message");
-            ReactionMessageHelper.CreateReactionMessage(Context, message, async (r, s) => await ReplyAsync($"[Multi] Received reaction {s}"), true);
+            ReactionMessageHelper.CreateCustomReactionMessage(Context, message, async (r, s) => await ReplyAsync($"[Multi] Received reaction {s}"), true);
         }
 
         [Command("rarities")]
@@ -74,6 +75,16 @@ namespace DiscordHackWeek2019.Commands.Modules
                 message += "\n```";
                 await ReplyAsync(message);
             }
+        }
+
+        [Command("pages")]
+        public async Task Pages()
+        {
+            var message = await ReplyAsync("Page 1");
+            ReactionMessageHelper.CreatePaginatedMessage(Context, message, 10, 1, m =>
+            {
+                return Task.FromResult(($"Page {m.CurrentPage}", (Embed)null));
+            });
         }
 
         [Command("set")]

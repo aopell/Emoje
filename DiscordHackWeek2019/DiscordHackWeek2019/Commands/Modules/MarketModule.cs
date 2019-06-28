@@ -26,7 +26,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
         [Command("listings"), Alias("view"), Summary("Views market listings in the global market")]
         public Task ViewListings() => ViewListings(Market.Global);
-            
+
         [Command("listings"), Alias("view"), Summary("Views market listings in either the global or local markets")]
         public Task ViewListings(Market market)
         {
