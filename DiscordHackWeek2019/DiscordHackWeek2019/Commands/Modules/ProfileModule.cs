@@ -37,15 +37,9 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Bot.Options.StartingCurrency} currency has been deposited to your account.");
         }
 
-        [Command("profile"), Summary("Displays the profile of yourself or another user")]
+        [Command("profile"), Summary("Displays the profile of yourself or another user"), JoinRequired]
         public async Task ViewProfile([Remainder] IUser user = null)
         {
-            user = Context.GetUserOrSender(user);
-            if (!Context.UserJoined(user.Id))
-            {
-                await ReplyAsync(Strings.UserJoinNeeded);
-                return;
-            }
 
             var profile = Context.GetProfile(user);
 
@@ -61,7 +55,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync(embed: embed.Build());
         }
 
-        [Command("inventory"), Summary("Displays the inventory of yourself or another user")]
+        [Command("inventory"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
         public Task ViewInventory([Remainder] IUser user = null)
         {
             throw new NotImplementedException();

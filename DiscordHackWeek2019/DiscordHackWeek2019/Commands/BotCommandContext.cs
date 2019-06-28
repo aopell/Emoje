@@ -68,6 +68,12 @@ namespace DiscordHackWeek2019.Commands
             return u != null;
         }
 
+        public bool UserEnabled(ulong id)
+        {
+            var u = UserCollection.GetById(id);
+            return !u.Disabled;
+        }
+
         public string WhatDoICall(ulong userId) => WhatDoICall(Guild.GetUser(userId));
 
         public string WhatDoICall(IUser user)
