@@ -73,8 +73,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 if (available >= count)
                 {
                     inventory.RemoveBoxes(type, count);
-                    var open = Open(inventory, variety, count);
-                    
+                    await Open(inventory, variety, count);
                     return;
                 }
 
@@ -130,11 +129,34 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             private async Task Open(InventoryWrapper inventory, LootBox variety, int count)
             {
-                StringBuilder message = new StringBuilder();
+                StringBuilder text = new StringBuilder();
+                IUserMessage message = null;
+                if(count > 1)
+                {
+                    string m = string.Concat(Enumerable.Repeat(variety.Emote.ToString() + "\n", count));
+                    message = await ReplyAsync(m);
+                    await Task.Delay(1000);
+                }
 
                 for (int i = 0; i < count; i++)
                 {
-                    foreach (var (rarity, emoji) in variety.Open(Context.Bot, 0))
+                    var box = variety.Open(Context.Bot, 0);
+                    if(count == 1)
+                    {
+                        message = await ReplyAsync(variety.Emote.ToString());
+                        await Task.Delay(1000);
+                        StringBuilder animation = new StringBuilder();
+                        int i = 0; 
+                        foreach(var (rarity, emoji) in box)
+                        {
+                            animation.Append($"{rarity.LeftBracket}❔{rarity.RightBracket}");
+                        }
+                        await message.ModifyAsync(m => m.Content = animation.ToString());
+                        await Task.Delay(1000);
+                        animation.Clear();
+                    }
+
+                    foreach (var (rarity, emoji) in box)
                     {
                         var trans = Transaction.FromLootbox(marketId: 0, buyer: inventory.UserId, variety.Name);
 
@@ -145,14 +167,13 @@ namespace DiscordHackWeek2019.Commands.Modules
                             Unicode = emoji
                         }, true);
 
-                        message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket}");
+                        text.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket}");
                     }
-                    message.AppendLine();
+                    text.AppendLine();
                 }
 
-                var reply = ReplyAsync(message.ToString());
                 inventory.Save();
-                await reply;
+                await message.ModifyAsync(m => m.Content = text.ToString());
             }
         }
     }

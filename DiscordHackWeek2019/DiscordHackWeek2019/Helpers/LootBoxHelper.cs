@@ -1,4 +1,5 @@
-﻿using DiscordHackWeek2019.Commands;
+﻿using Discord;
+using DiscordHackWeek2019.Commands;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace DiscordHackWeek2019.Helpers
     {
         public static Dictionary<string, LootBox> LootBoxVarieties { get; set; } = new Dictionary<string, LootBox>
         {
-            ["normal"] = new LootBox { Cost = 500, Name = "normal", RarityRatios = new[] { new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 } } }
+            ["normal"] = new LootBox { Cost = 500, Name = "normal", Emote = Emote.Parse("<:lootbox:593607880251277322>"), RarityRatios = new[] { new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 } } }
         };
 
         public static IReadOnlyCollection<string> GetAllLootBoxNames(BotCommandContext ctx) => GetAllLootBoxNames(ctx.Guild.Id);
@@ -25,6 +26,7 @@ namespace DiscordHackWeek2019.Helpers
         public int Cost { get; set; }
         public int Items => RarityRatios.Length;
         public int[][] RarityRatios { get; set; }
+        public Emote Emote { get; set; }
         public List<(Rarity rarity, string emoji)> Open(DiscordBot bot, ulong marketId)
         {
             List<(Rarity, string)> results = new List<(Rarity, string)>();
