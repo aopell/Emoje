@@ -42,6 +42,12 @@ namespace DiscordHackWeek2019.Helpers
             }
         }
 
+        public int Currency
+        {
+            get => User.Currency;
+            set => User.Currency = value;
+        }
+
         public IEnumerable<Emoji> Enumerate() => User.Inventory
                                                     .SelectMany(x => x.Value)
                                                     .Select(id => Context.EmojiCollection.FindById(id));
@@ -74,6 +80,21 @@ namespace DiscordHackWeek2019.Helpers
             }
 
             list.Add(id);
+            dirty = true;
+        }
+
+        public void AddLootbox(string variety, int count = 1) => AddLootbox(variety, (uint) count);
+        public void AddLootbox(string variety, uint count = 1)
+        {
+            if (User.LootBoxes.ContainsKey(variety))
+            {
+                User.LootBoxes[variety] += count;
+            }
+            else
+            {
+                User.LootBoxes.Add(variety, count);
+            }
+
             dirty = true;
         }
 
