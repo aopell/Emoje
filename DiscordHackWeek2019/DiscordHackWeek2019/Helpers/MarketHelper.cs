@@ -291,7 +291,7 @@ namespace DiscordHackWeek2019.Helpers
             var buyer = ctx.Guild.GetUser(purchase.BuyerId);
             var message = await ctx.Channel.SendMessageAsync($"{buyer.Mention}, are you sure you want to buy {purchase.Emoji} for {listing.Price}?");
 
-            ReactionMessageHelper.CreateReactionMessage(ctx, message, 
+            ReactionMessageHelper.CreateConfirmReactionMessage(ctx, message, 
                 async onOkay =>
                 {
                     var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {listing.Price}");

@@ -82,7 +82,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
 
             var message = await ReplyAsync($"Are you sure you want to sell {emoji} for ${price}?");
-            ReactionMessageHelper.CreateReactionMessage(Context, message,
+            ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                 async r =>
                 {
                     // TODO: get this data from the inventory and remove it from there

@@ -80,7 +80,7 @@ namespace DiscordHackWeek2019
 
             if (message.Author.Id == Client.CurrentUser.Id && reaction.UserId != Client.CurrentUser.Id)
             {
-                var reactionMessage = ReactionMessageHelper.GetMessage(message.Id);
+                var reactionMessage = ReactionMessageHelper.GetReactionMessageById(message.Id);
                 if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id)
                 {
                     try
@@ -99,7 +99,7 @@ namespace DiscordHackWeek2019
                     else
                     {
                         await message.RemoveAllReactionsAsync();
-                        ReactionMessageHelper.Delete(reactionMessage);
+                        ReactionMessageHelper.DeleteReactionMessage(reactionMessage);
                     }
                 }
             }
