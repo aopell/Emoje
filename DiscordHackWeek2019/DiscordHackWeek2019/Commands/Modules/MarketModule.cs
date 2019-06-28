@@ -42,25 +42,13 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 listings = market.Listings.SelectMany(kv => kv.Value.Select(l => (kv.Key, l)));
                 
-                if (listings.Count() == 0)
-                {
-                    await ReplyAsync($"There are no listings in {Context.GetMarketName(MarketId(m))}");
-                    return;
-                }
+                if (listings.Count() == 0) throw new DiscordCommandException($"There are no listings in {Context.GetMarketName(MarketId(m))}");
             }
             else
             {
-                if (!EmojiHelper.IsValidEmoji(emoji))
-                {
-                    await ReplyAsync($"{emoji} cannot be bought or sold");
-                    return;
-                }
+                if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException($"{emoji} cannot be bought or sold");
 
-                if (!market.Listings.ContainsKey(emoji))
-                {
-                    await ReplyAsync($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(m))}");
-                    return;
-                }
+                if (!market.Listings.ContainsKey(emoji)) throw new DiscordCommandException($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(m))}");
 
                 listings = market.Listings[emoji].Select(l => (emoji, l));
             }
@@ -107,27 +95,15 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from either the global or local markets")]
         public async Task BuyEmoji(Market market, string emoji)
         {
-            if (!EmojiHelper.IsValidEmoji(emoji))
-            {
-                await ReplyAsync($"{emoji} cannot be bought or sold");
-                return;
-            }
+            if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException($"{emoji} cannot be bought or sold");
 
             (var price, var valid) = MarketHelper.GetEmojiPrice(Context, MarketId(market), emoji);
 
-            if (!valid)
-            {
-                await ReplyAsync($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(market))}");
-                return;
-            }
+            if (!valid) throw new DiscordCommandException($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(market))}");
 
             int money = Context.CallerProfile.Currency;
 
-            if (price > money)
-            {
-                await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you need {Context.Money(price - money)} more to buy {emoji}");
-                return;
-            }
+            if (price > money) throw new DiscordCommandException($"Sorry, {Context.WhatDoICall(Context.User)}, you need {Context.Money(price - money)} more to buy {emoji}");
 
             MarketHelper.BuyListing(Context, MarketId(market), emoji, Context.User.Id);
         }
@@ -138,25 +114,13 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale in either the global or local markets")]
         public async Task SellEmoji(Market market, string emoji, int price)
         {
-            if (!EmojiHelper.IsValidEmoji(emoji))
-            {
-                await ReplyAsync($"{emoji} cannot be bought or sold");
-                return;
-            }
+            if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException($"{emoji} cannot be bought or sold");
 
             var inventory = Context.GetInventory(Context.CallerProfile);
 
-            if (!inventory.HasEmoji(emoji))
-            {
-                await ReplyAsync($"{Context.User.Mention}, you don't have any {emoji} to sell");
-                return;
-            }
+            if (!inventory.HasEmoji(emoji)) throw new DiscordCommandException($"{Context.User.Mention}, you don't have any {emoji} to sell");
 
-            if (price <= 0)
-            {
-                await ReplyAsync($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")}no money");
-                return;
-            }
+            if (price <= 0) throw new DiscordCommandException($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")}no money");
 
             var message = await ReplyAsync($"{Context.User.Mention}, are you sure you want to sell {emoji} for {Context.Money(price)}?");
             ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,

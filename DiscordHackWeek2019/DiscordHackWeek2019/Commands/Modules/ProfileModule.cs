@@ -16,12 +16,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("join"), Alias("optin", "optout"), Summary("Sell your soul. For a modest amount of currency.")]
         public async Task Join()
         {
-            if (Context.UserJoined(Context.User.Id))
-            {
-                // User has already joined
-                await ReplyAsync("You've already joined. There's no going back."); // TODO: real message
-                return;
-            }
+            if (Context.UserJoined(Context.User.Id)) throw new DiscordCommandException("You've already joined. There's no going back."); // TODO: real message
 
             Context.UserCollection.Insert(new User
             {
@@ -122,11 +117,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("details"), Summary("View all of one emoji you own"), JoinRequired]
         public async Task ViewInventory(string emoji)
         {
-            if (!Helpers.EmojiHelper.IsValidEmoji(emoji))
-            {
-                await ReplyAsync("That is not a valid emoji");
-                return;
-            }
+            if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("That is not a valid emoji");
 
             // Get a list of emojis
             Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, Context.User.Id);

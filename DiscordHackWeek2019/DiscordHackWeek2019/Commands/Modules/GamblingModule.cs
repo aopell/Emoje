@@ -20,21 +20,13 @@ namespace DiscordHackWeek2019.Commands.Modules
             public async Task Buy(int count = 1, string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
-                if (!availableVarieties.Contains(type))
-                {
-                    await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
-                    return;
-                }
+                if (!availableVarieties.Contains(type)) throw new DiscordCommandException($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
 
                 var variety = LootBoxHelper.GetAllLootBoxes(Context)[type];
 
                 var inventory = Context.GetInventory(Context.User);
 
-                if (inventory.Currency < variety.Cost)
-                {
-                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford to buy one");
-                    return;
-                }
+                if (inventory.Currency < variety.Cost) throw new DiscordCommandException($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford to buy one");
 
                 int actualCount = Math.Min(inventory.Currency / variety.Cost, count);
                 int cost = actualCount * variety.Cost;
@@ -65,11 +57,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             public async Task Open(int count = 1, string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
-                if (!availableVarieties.Contains(type))
-                {
-                    await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
-                    return;
-                }
+                if (!availableVarieties.Contains(type)) await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
 
                 if (count > 5)
                 {
@@ -90,11 +78,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                if (available == 0 && inventory.Currency < variety.Cost)
-                {
-                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
-                    return;
-                }
+                if (available == 0 && inventory.Currency < variety.Cost) throw new DiscordCommandException($"Sorry, {Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
 
                 int needToBuy = count - available;
 

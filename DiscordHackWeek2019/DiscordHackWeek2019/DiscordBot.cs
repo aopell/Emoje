@@ -89,7 +89,7 @@ namespace DiscordHackWeek2019
                     }
                     catch (Exception ex)
                     {
-                        await channel.SendMessageAsync(ex.ToString());
+                        await ExceptionMessageHelper.HandleException(ex, channel);
                     }
 
                     if (reactionMessage.AllowMultipleReactions)
@@ -101,6 +101,10 @@ namespace DiscordHackWeek2019
                         await message.RemoveAllReactionsAsync();
                         ReactionMessageHelper.DeleteReactionMessage(reactionMessage);
                     }
+                }
+                else if(reactionMessage != null && reaction.User.IsSpecified)
+                {
+                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
                 }
             }
         }

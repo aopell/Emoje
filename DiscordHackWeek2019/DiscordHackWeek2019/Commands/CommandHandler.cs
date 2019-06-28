@@ -1,7 +1,10 @@
-﻿using Discord.Commands;
+﻿using Discord;
+using Discord.Commands;
 using Discord.WebSocket;
+using DiscordHackWeek2019.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,13 +74,11 @@ namespace DiscordHackWeek2019.Commands
             // command.
             if (!result.IsSuccess)
             {
-#if DEBUG
                 if (result.Error == CommandError.Exception && result is ExecuteResult eResult)
                 {
-                    await context.Channel.SendMessageAsync(eResult.Exception.ToString());
+                    await ExceptionMessageHelper.HandleException(eResult.Exception, message.Channel);
                     return;
                 }
-#endif
                 await context.Channel.SendMessageAsync(result.ErrorReason);
             }
 
