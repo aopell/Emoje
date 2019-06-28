@@ -27,7 +27,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         private ulong MarketId(Market market) => market == 0 ? 0 : Context.Guild.Id;
 
         [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in the global market")]
-        public Task ViewListings(string emoji = "all", [Remainder] string sorting = "lowest") => ViewListings(Market.Global, emoji, sorting);
+        public async Task ViewListings(string emoji = "all", [Remainder] string sorting = "lowest") => await ViewListings(Market.Global, emoji, sorting);
 
         [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in either the global or local markets")]
         public async Task ViewListings(Market m, string emoji = "all", [Remainder] string sorting = "lowest")
@@ -90,7 +90,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from the global market")]
-        public async Task BuyEmoji(string emoji) => BuyEmoji(Market.Global, emoji);
+        public async Task BuyEmoji(string emoji) => await BuyEmoji(Market.Global, emoji);
 
         [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from either the global or local markets")]
         public async Task BuyEmoji(Market market, string emoji)
@@ -109,7 +109,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale on the global market")]
-        public async Task SellEmoji(string emoji, int price) => SellEmoji(Market.Global, emoji, price);
+        public async Task SellEmoji(string emoji, int price) => await SellEmoji(Market.Global, emoji, price);
 
         [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale in either the global or local markets")]
         public async Task SellEmoji(Market market, string emoji, int price)
