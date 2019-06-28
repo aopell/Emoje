@@ -16,10 +16,10 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command, Summary("Displays all available commands and how to use them")]
         public async Task Help(int page = 1)
         {
-            if (page <= 0) throw new ArgumentOutOfRangeException(nameof(page), "Page must be positive and nonzero");
+            if (page <= 0) throw new DiscordCommandException("Page must be positive and nonzero");
             const int NUM_PER_PAGE = 5;
             int totalPages = (int)Math.Ceiling(HelpHelper.AllCommands.Count / (double)NUM_PER_PAGE);
-            if (page > totalPages) throw new IndexOutOfRangeException($"Can't go to page {page}, there are only {totalPages}");
+            if (page > totalPages) throw new DiscordCommandException($"Can't go to page {page}, there are only {totalPages}");
 
             ReactionMessageHelper.CreatePaginatedMessage(Context, await ReplyAsync(embed: buildPage(page)), totalPages, page, m =>
             {
@@ -44,6 +44,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task Help([Remainder] string command)
         {
             var commands = HelpHelper.AllCommands.Where(c => c.Command == command);
+            if (!commands.Any()) throw new DiscordCommandException("No matching commands found");
             EmbedBuilder result = new EmbedBuilder();
             result.WithTitle("Help");
             foreach (var c in commands)
