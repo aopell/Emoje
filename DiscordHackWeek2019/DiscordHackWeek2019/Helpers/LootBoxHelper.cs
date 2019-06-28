@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DiscordHackWeek2019.Commands;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,11 @@ namespace DiscordHackWeek2019.Helpers
         {
             ["normal"] = new LootBox { Cost = 500, Name = "normal", RarityRatios = new[] { new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 } } }
         };
+
+        public static IReadOnlyCollection<string> GetAllLootBoxNames(BotCommandContext ctx) => GetAllLootBoxNames(ctx.Guild.Id);
+        public static IReadOnlyCollection<string> GetAllLootBoxNames(ulong localMarket) => LootBoxVarieties.Keys; // TODO: add custom varieties
+        public static Dictionary<string, LootBox> GetAllLootBoxes(BotCommandContext ctx) => GetAllLootBoxes(ctx.Guild.Id); // TODO: add custom varieties
+        public static Dictionary<string, LootBox> GetAllLootBoxes(ulong localMarket) => LootBoxVarieties; // TODO: add custom varieties
     }
 
     public class LootBox

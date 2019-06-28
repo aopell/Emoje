@@ -291,74 +291,70 @@ namespace DiscordHackWeek2019.Helpers
             var buyer = ctx.Guild.GetUser(purchase.BuyerId);
             var message = await ctx.Channel.SendMessageAsync($"{buyer.Mention}, are you sure you want to buy {purchase.Emoji} for {listing.Price}?");
 
-            async Task yes(ReactionMessage r)
-            {
-                var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {listing.Price}");
-
-                var buyerProfile = ctx.UserCollection.GetById(purchase.BuyerId);
-
-                if (listing.SellerId == buyer.Id)
+            ReactionMessageHelper.CreateReactionMessage(ctx, message, 
+                async onOkay =>
                 {
-                    buyer.GetOrCreateDMChannelAsync().ContinueWith(async task =>
-                    {
-                        if (task.IsFaulted) return; // TODO: log error
+                    var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {listing.Price}");
 
-                        await task.Result.SendMessageAsync($"You bought your own {purchase.Emoji} for {listing.Price}. You still have {buyerProfile.Currency}");
-                    });
-                }
-                else
+                    var buyerProfile = ctx.UserCollection.GetById(purchase.BuyerId);
+
+                    if (listing.SellerId == buyer.Id)
+                    {
+                        buyer.GetOrCreateDMChannelAsync().ContinueWith(async task =>
+                        {
+                            if (task.IsFaulted) return; // TODO: log error
+
+                            await task.Result.SendMessageAsync($"You bought your own {purchase.Emoji} for {listing.Price}. You still have {buyerProfile.Currency}");
+                        });
+                    }
+                    else
+                    {
+                        var seller = ctx.Bot.Client.GetUser(listing.SellerId);
+                        var sellerProfile = ctx.GetProfile(seller);
+
+                        buyerProfile.Currency -= listing.Price;
+                        sellerProfile.Currency += listing.Price;
+
+                        seller.GetOrCreateDMChannelAsync().ContinueWith(async task =>
+                        {
+                            if (task.IsFaulted) return; // TODO: log error
+
+                            await task.Result.SendMessageAsync($"{buyer.ToString()} bought your {purchase.Emoji} for {listing.Price}. You now have {sellerProfile.Currency}");
+                        });
+                        Task.Run(() => ctx.UserCollection.Update(sellerProfile));
+                    }
+
+                    var emoji = ctx.EmojiCollection.FindById(listing.EmojiId);
+
+                    var market = ctx.MarketCollection.GetById(purchase.MarketId);
+
+                    var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId);
+
+                    emoji.Transactions.Add(Queue(trans).Receive());
+                    emoji.Owner = purchase.BuyerId;
+
+                    // The inventory wrapper will handle saving for us
+                    var inventory = ctx.GetInventory(buyerProfile);
+                    inventory.Add(emoji);
+
+                    inventory.Save();
+                }, 
+                async onDecline =>
                 {
-                    var seller = ctx.Bot.Client.GetUser(listing.SellerId);
-                    var sellerProfile = ctx.GetProfile(seller);
+                    var handle = message.ModifyAsync(properties => properties.Content = $"Purchase of {purchase.Emoji} cancelled");
 
-                    buyerProfile.Currency -= listing.Price;
-                    sellerProfile.Currency += listing.Price;
+                    Queue(PostListing.InMarket(purchase.Emoji, purchase.MarketId, listing));
 
-                    seller.GetOrCreateDMChannelAsync().ContinueWith(async task =>
-                    {
-                        if (task.IsFaulted) return; // TODO: log error
-
-                        await task.Result.SendMessageAsync($"{buyer.ToString()} bought your {purchase.Emoji} for {listing.Price}. You now have {sellerProfile.Currency}");
-                    });
-                    Task.Run(() => ctx.UserCollection.Update(sellerProfile));
-                }
-
-                var emoji = ctx.EmojiCollection.FindById(listing.EmojiId);
-
-                var market = ctx.MarketCollection.GetById(purchase.MarketId);
-
-                var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId);
-
-                emoji.Transactions.Add(Queue(trans).Receive());
-                emoji.Owner = purchase.BuyerId;
-
-                // The inventory wrapper will handle saving for us
-                var inventory = ctx.GetInventory(buyerProfile);
-                inventory.Add(emoji);
-
-                inventory.Save();
-            }
-
-            async void cancelled()
-            {
+                    await handle;
+                }, 
+                onTimeout: async () =>
+                {
                 var handle = message.ModifyAsync(properties => properties.Content = $"Purchase of {purchase.Emoji} cancelled");
 
                 Queue(PostListing.InMarket(purchase.Emoji, purchase.MarketId, listing));
 
                 await handle;
-            }
-
-            async Task no(ReactionMessage r)
-            {
-                var handle = r.Message.ModifyAsync(properties => properties.Content = $"Purchase of {purchase.Emoji} cancelled");
-
-                Queue(PostListing.InMarket(purchase.Emoji, purchase.MarketId, listing));
-
-                await handle;
-            }
-
-
-            ReactionMessageHelper.CreateReactionMessage(ctx, message, yes, no, onTimeout: cancelled);
+            });
         }
     }
 }
