@@ -81,6 +81,17 @@ namespace DiscordHackWeek2019.Commands
             return user is IGuildUser gu && !string.IsNullOrEmpty(gu.Nickname) ? gu.Nickname : user.Username;
         }
 
+        public string GetMarketName(ulong marketId)
+        {
+            if (marketId == 0) return "the global market";
+
+            var guild = Bot.Client.GetGuild(marketId);
+
+            if (guild == null) return "some unknown market";
+
+            return $"the {guild.Name} market";
+        }
+
         public EmbedBuilder EmbedFromUser(IUser user) => new EmbedBuilder().WithAuthor(WhatDoICall(user), user.AvatarUrlOrDefaultAvatar());
 
         public User GetProfile(IUser user) => GetProfile(user.Id);

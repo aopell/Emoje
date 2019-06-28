@@ -55,7 +55,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync(embed: embed.Build());
         }
 
-        [Command("inventory"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
+        [Command("inventory"), Alias("i", "inv"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
         public async Task ViewInventory([Remainder] IUser user = null)
         {
             // Get a list of emojis
@@ -65,49 +65,86 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             // Count them
             StringBuilder emojiList = new StringBuilder();
-            List<EmbedBuilder> embeds = new List<EmbedBuilder>();
             Dictionary<string, int> emojisCount = new Dictionary<string, int>();
-            if (emojis != null) {
+            if (emojis != null)
+            {
                 foreach (var emoji in emojis)
                 {
-                    if(!emojisCount.Keys.Contains(emoji.Unicode))
+                    if (!emojisCount.Keys.Contains(emoji.Unicode))
                     {
                         emojisCount[emoji.Unicode] = 0;
                     }
                     emojisCount[emoji.Unicode]++;
-                    //res.Append((new Discord.Emoji(emoji.Unicode)) + ": " + emoji.EmojiId + "\n");
                 }
-            } else
+            }
+            else
             {
                 return;
             }
 
-            int lineCount = 0;
+            if (emojisCount.Keys.Count == 0)
+            {
+                await ReplyAsync("You don't have any emojis!!!");
+                return;
+            }
+
             int inLineCount = 1;
-            foreach(string key in Helpers.EmojiHelper.IterateAllEmojiOrdered)
+            StringBuilder line = new StringBuilder();
+            List<string> contents = new List<string>();
+            foreach (string key in Helpers.EmojiHelper.IterateAllEmojiOrdered)
             {
                 if (emojisCount.Keys.Contains(key))
                 {
-                    emojiList.Append($"{key} x `{emojisCount[key]:000}`   ");
-
+                    line.Append($"{key} x `{emojisCount[key]:000}`   ");
                     if (inLineCount == 5)
                     {
-                        emojiList.Append("\n");
+                        contents.Add(line.ToString());
+                        line.Clear();
                         inLineCount = 0;
-                        lineCount++;
-                    }
-                    if (lineCount == 5)
-                    {
-                        var toAdd = Context.EmbedFromUser(user);
-                        toAdd.AddField($"Emojis", emojiList.ToString(), true);
-                        embeds.Add(toAdd);
-
                     }
                     inLineCount++;
                 }
             }
-            //var toAdd = Context.EmbedFromUser(user);
-            //toAdd.AddField($"Emojis", emojiList.ToString(), true);
+            if (line.Length != 0)
+            {
+                contents.Add(line.ToString());
+            }
+
+            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emojis:", 8);
+
+            var message = await ReplyAsync(embed: embeds[0].Build());
+            Helpers.ReactionMessageHelper.CreatePaginatedMessage(Context, message, embeds.Count, 1, m =>
+            {
+                return Task.FromResult(($"", embeds[m.CurrentPage -1].Build()));
+            });
+        }
+
+        [Command("details"), Summary("View all of one emoji you own"), JoinRequired]
+        public async Task ViewInventory(string emoji)
+        {
+            if (!Helpers.EmojiHelper.IsValidEmoji(emoji))
+            {
+                await ReplyAsync("That is not a valid emoji");
+                return;
+            }
+
+            // Get a list of emojis
+            Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, Context.User.Id);
+            var emojis = inventory.Enumerate(emoji);
+
+            List<string> contents = new List<string>();
+            foreach (var e in emojis)
+            {
+                contents.Add($"{e.Unicode}: {e.EmojiId}");
+            }
+
+            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Details:", 15);
+
+            var message = await ReplyAsync(embed: embeds[0].Build());
+            Helpers.ReactionMessageHelper.CreatePaginatedMessage(Context, message, embeds.Count, 1, m =>
+            {
+                return Task.FromResult(($"", embeds[m.CurrentPage - 1].Build()));
+            });
         }
     }
 }

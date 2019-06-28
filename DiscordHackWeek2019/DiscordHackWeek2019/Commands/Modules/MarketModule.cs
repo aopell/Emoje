@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -27,9 +28,26 @@ namespace DiscordHackWeek2019.Commands.Modules
         public Task ViewListings() => ViewListings(Market.Global);
 
         [Command("listings"), Alias("view"), Summary("Views market listings in either the global or local markets")]
-        public Task ViewListings(Market market)
+        public async Task ViewListings(Market market, string emoji = "all", [Remainder] string sorting = "lowest")
         {
-            throw new NotImplementedException();
+            switch (sorting)
+            {
+                case "highest":
+                case "highest to lowest":
+                case "greatest to least":
+                case "g2l":
+                case "h2l":
+                    break;
+                case "lowest":
+                case "lowest to highest":
+                case "lowest to ":
+                case "cheap":
+                case "l2g":
+                case "l2h":
+                default:
+
+                    break;
+            }
         }
 
         [Command("buy"), Alias("purchase", "order"), Summary("Purchase an emoji from the global market")]
@@ -48,7 +66,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (!valid)
             {
-                await ReplyAsync($"Sorry, {emoji} is not available");
+                await ReplyAsync($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(market))}");
                 return;
             }
 
@@ -75,29 +93,36 @@ namespace DiscordHackWeek2019.Commands.Modules
                 return;
             }
 
-            if (price <= 0)
+            var inventory = Context.GetInventory(Context.CallerProfile);
+
+            if (!inventory.HasEmoji(emoji))
             {
-                await ReplyAsync($"You can't sell things for {(price == 0 ? "" : "less than ")} no money");
+                await ReplyAsync($"{Context.User.Mention}, you don't have any {emoji} to sell");
                 return;
             }
 
-            var message = await ReplyAsync($"Are you sure you want to sell {emoji} for ${Context.Money(price)}?");
-            ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
-            async r =>
+            if (price <= 0)
             {
-                // TODO: get this data from the inventory and remove it from there
-                Models.Emoji toSell = new Models.Emoji
+                await ReplyAsync($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")} no money");
+                return;
+            }
+
+            var message = await ReplyAsync($"{Context.User.Mention}, are you sure you want to sell {emoji} for {Context.Money(price)}?");
+            ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
+                async r =>
                 {
-                    Unicode = emoji,
-                    Owner = Context.User.Id,
-                    Transactions = new List<Models.TransactionInfo>()
-                };
+                    var (toSell, index) = inventory.Enumerate(emoji).Select((e, i) => (e, i)).OrderBy(e => e.e.Transactions.Count).First();
 
-                toSell.EmojiId = Context.EmojiCollection.Insert(toSell);
+                    inventory.RemoveEmoji(emoji, index);
 
-                MarketHelper.AddListing(Context, MarketId(market), toSell, price);
-                await ReplyAsync($"Posted your {emoji} for {Context.Money(price)}");
-            }, r => Task.CompletedTask);
+                    MarketHelper.AddListing(Context, MarketId(market), toSell, price);
+                    inventory.Save();
+                    await message.ModifyAsync(m => m.Content = $"Listed your {emoji} for {Context.Money(price)} in {Context.GetMarketName(MarketId(market))}");
+                }, 
+                async r =>
+                {
+                    await message.ModifyAsync(m => m.Content = $"Cancelled listing of {emoji}");
+                });
         }
     }
 }
