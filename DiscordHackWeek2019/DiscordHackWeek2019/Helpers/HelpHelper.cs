@@ -74,7 +74,7 @@ namespace DiscordHackWeek2019.Helpers
             Parameters = parameters;
         }
 
-        public override string ToString() => $"`{$"{Command} {string.Join(' ', Parameters)}".Trim()}`\n{Summary}".Trim();
+        public override string ToString() => $"`{$"{Command} {string.Join(' ', Parameters)}".Trim()}`";
     }
 
     public struct HelpParam
