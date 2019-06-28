@@ -8,8 +8,10 @@ namespace DiscordHackWeek2019.Helpers
     public static class EmojiHelper
     {
         public static IReadOnlyCollection<string> IterateAllEmoji { get => EmojiToName.Keys; }
+        public static IReadOnlyCollection<string> IterateAllEmojiOrdered { get => EmojiToNameOrdered.Keys; }
 
         private static Dictionary<string, string> EmojiToName = new Dictionary<string, string>();
+        private static Dictionary<string, string> EmojiToNameOrdered = new Dictionary<string, string>();
         private static readonly Dictionary<string, string> NameToEmoji = new Dictionary<string, string>();
 
         public static void Initialize(string emojiTableName, Random random)
@@ -21,6 +23,7 @@ namespace DiscordHackWeek2019.Helpers
                     (var emoji, var name, var rest) = emojiTable.ReadLine().Split('\t');
 
                     EmojiToName[emoji] = name;
+                    EmojiToNameOrdered[emoji] = name;
                     NameToEmoji[name] = emoji;
                 }
             }

@@ -94,6 +94,8 @@ namespace DiscordHackWeek2019.Commands
         public InventoryWrapper GetInventory(ulong user) => new InventoryWrapper(this, user);
         public InventoryWrapper GetInventory(User user) => new InventoryWrapper(this, user);
 
+        public string Money(int amount) => $"e̩̍{amount}";
+
         public void ClearCachedValues()
         {
             _user = null;

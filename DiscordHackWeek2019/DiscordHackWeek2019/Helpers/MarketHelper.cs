@@ -289,12 +289,12 @@ namespace DiscordHackWeek2019.Helpers
         {
             var ctx = purchase.Context;
             var buyer = ctx.Guild.GetUser(purchase.BuyerId);
-            var message = await ctx.Channel.SendMessageAsync($"{buyer.Mention}, are you sure you want to buy {purchase.Emoji} for {listing.Price}?");
+            var message = await ctx.Channel.SendMessageAsync($"{buyer.Mention}, are you sure you want to buy {purchase.Emoji} for {ctx.Money(listing.Price)}?");
 
             ReactionMessageHelper.CreateConfirmReactionMessage(ctx, message, 
                 async onOkay =>
                 {
-                    var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {listing.Price}");
+                    var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {ctx.Money(listing.Price)}");
 
                     var buyerProfile = ctx.UserCollection.GetById(purchase.BuyerId);
 
@@ -304,7 +304,7 @@ namespace DiscordHackWeek2019.Helpers
                         {
                             if (task.IsFaulted) return; // TODO: log error
 
-                            await task.Result.SendMessageAsync($"You bought your own {purchase.Emoji} for {listing.Price}. You still have {buyerProfile.Currency}");
+                            await task.Result.SendMessageAsync($"You bought your own {purchase.Emoji} for {listing.Price}. You still have {ctx.Money(buyerProfile.Currency)}");
                         });
                     }
                     else
@@ -319,7 +319,7 @@ namespace DiscordHackWeek2019.Helpers
                         {
                             if (task.IsFaulted) return; // TODO: log error
 
-                            await task.Result.SendMessageAsync($"{buyer.ToString()} bought your {purchase.Emoji} for {listing.Price}. You now have {sellerProfile.Currency}");
+                            await task.Result.SendMessageAsync($"{buyer.ToString()} bought your {purchase.Emoji} for {listing.Price}. You now have {ctx.Money(sellerProfile.Currency)}");
                         });
                         Task.Run(() => ctx.UserCollection.Update(sellerProfile));
                     }

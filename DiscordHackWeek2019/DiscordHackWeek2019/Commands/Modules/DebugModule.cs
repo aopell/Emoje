@@ -86,5 +86,14 @@ namespace DiscordHackWeek2019.Commands.Modules
                 return Task.FromResult(($"Page {m.CurrentPage}", (Embed)null));
             });
         }
+
+        [Command("set")]
+        public async Task SetCurrency(Discord.IUser user, int amount)
+        {
+            var thing = Context.UserCollection.GetById(user.Id);
+            thing.Currency = amount;
+            Context.UserCollection.Update(thing);
+            await ReplyAsync("Ok!");
+        }
     }
 }
