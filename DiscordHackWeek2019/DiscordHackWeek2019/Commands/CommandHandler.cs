@@ -79,7 +79,15 @@ namespace DiscordHackWeek2019.Commands
                     await ExceptionMessageHelper.HandleException(eResult.Exception, message.Channel);
                     return;
                 }
-                await context.Channel.SendMessageAsync(result.ErrorReason);
+
+                if(result.Error != CommandError.UnknownCommand)
+                {
+                    EmbedBuilder embed = new EmbedBuilder();
+                    embed.WithTitle("Error Loading Command");
+                    embed.WithColor(Color.Red);
+                    embed.WithDescription(result.ErrorReason);
+                    await context.Channel.SendMessageAsync(embed: embed.Build());
+                }
             }
 
         }
