@@ -22,7 +22,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
                 if (!availableVarieties.Contains(type))
                 {
-                    await ReplyAsync($"{type} isn't a lootbox you can buy, try one of these:\n{string.Join(", ", availableVarieties)}");
+                    await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
                     return;
                 }
 
@@ -42,15 +42,15 @@ namespace DiscordHackWeek2019.Commands.Modules
                 string text;
 
                 if (count > actualCount) text = $"{Context.User.Mention}, you can only afford {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")}, do you still want to purchase {(actualCount == 1 ? "it" : "them")} for {cost}?";
-                else text = $"{Context.User.Mention}, are you sure you want to buy {actualCount} box{(actualCount == 1 ? "" : "es")} for {cost}?";
+                else text = $"{Context.User.Mention}, are you sure you want to buy {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {cost}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
                 ReactionMessageHelper.CreateReactionMessage(Context, message,
                     async onOkay =>
                     {
-                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {actualCount} box{(actualCount == 1 ? "" : "es")} for {cost}");
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {cost}");
                         inventory.Currency -= cost;
-                        inventory.AddLootbox(type, actualCount);
+                        inventory.AddLoot(type, actualCount);
 
                         inventory.Save();
                         await modify;
@@ -64,23 +64,74 @@ namespace DiscordHackWeek2019.Commands.Modules
             [Command("open"), Summary("Open a lootbox")]
             public async Task Open(int count = 1, string type = "normal")
             {
-                // Limit count
-                if (count > 5 || count < 1)
+                var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
+                if (!availableVarieties.Contains(type))
                 {
-                    await ReplyAsync("You can only open up to 5 loot boxes at a time.");
+                    await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
+                    return;
+                }
+                var inventory = Context.GetInventory(Context.User);
+                var variety = LootBoxHelper.GetAllLootBoxes(Context)[type];
+
+                int available = inventory.GetNumLootBoxes(type);
+
+                if (available >= count)
+                {
+                    var open = Open(inventory, variety, count);
+                    
                     return;
                 }
 
-                StringBuilder message = new StringBuilder();
-                var inventory = Context.GetInventory(Context.User);
+                if (available == 0 && inventory.Currency < variety.Cost)
+                {
+                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford one");
+                    return;
+                }
 
-                var variety = LootBoxHelper.GetAllLootBoxes(Context)[type];
+                int needToBuy = count - available;
+
+                int canBuy = Math.Min(inventory.Currency / variety.Cost, needToBuy);
+                int cost = canBuy * variety.Cost;
+
+                int toOpen = available + canBuy;
+
+                string text;
+
+                if (needToBuy > canBuy) text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")} right now, and you can only afford {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")}, do you still want to purchase {(canBuy == 1 ? "it" : "them")} for {cost} and open {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+                else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {cost} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+
+                var message = await Context.Channel.SendMessageAsync(text);
+                ReactionMessageHelper.CreateReactionMessage(Context, message,
+                    async onOkay =>
+                    {
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {cost}");
+                        inventory.Currency -= cost;
+
+                        await Open(inventory, variety, toOpen);
+                        await modify;
+                    },
+                    async onDecline =>
+                    {
+                        await message.ModifyAsync(m => m.Content = $"Lootbox purchase cancelled");
+                    });
+                return;
+            }
+
+            [Command("view"), Summary("View your currently owned loot boxes")]
+            public Task View()
+            {
+                throw new NotImplementedException();
+            }
+
+            private async Task Open(InventoryWrapper inventory, LootBox variety, int count)
+            {
+                StringBuilder message = new StringBuilder();
 
                 for (int i = 0; i < count; i++)
                 {
                     foreach (var (rarity, emoji) in variety.Open(Context.Bot, 0))
                     {
-                        var trans = Transaction.FromLootbox(marketId: 0, buyer: inventory.UserId, type);
+                        var trans = Transaction.FromLootbox(marketId: 0, buyer: inventory.UserId, variety.Name);
 
                         inventory.Add(new Models.Emoji
                         {
@@ -94,15 +145,10 @@ namespace DiscordHackWeek2019.Commands.Modules
                     message.AppendLine();
                 }
 
+                var reply = ReplyAsync(message.ToString());
+
                 inventory.Save();
-
-                await ReplyAsync(message.ToString());
-            }
-
-            [Command("view"), Summary("View your currently owned loot boxes")]
-            public Task View()
-            {
-                throw new NotImplementedException();
+                await reply;
             }
         }
     }
