@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -48,7 +49,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (!valid)
             {
-                await ReplyAsync($"Sorry, {emoji} is not available");
+                await ReplyAsync($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(market))}");
                 return;
             }
 
@@ -75,28 +76,31 @@ namespace DiscordHackWeek2019.Commands.Modules
                 return;
             }
 
-            if (price <= 0)
+            var inventory = Context.GetInventory(Context.CallerProfile);
+
+            if (!inventory.HasEmoji(emoji))
             {
-                await ReplyAsync($"You can't sell things for {(price == 0 ? "" : "less than ")} no money");
+                await ReplyAsync($"{Context.User.Mention}, you don't have any {emoji} to sell");
                 return;
             }
 
-            var message = await ReplyAsync($"Are you sure you want to sell {emoji} for {Context.Money(price)}?");
+            if (price <= 0)
+            {
+                await ReplyAsync($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")} no money");
+                return;
+            }
+
+            var message = await ReplyAsync($"{Context.User.Mention}, are you sure you want to sell {emoji} for {Context.Money(price)}?");
             ReactionMessageHelper.CreateReactionMessage(Context, message,
                 async r =>
                 {
-                    // TODO: get this data from the inventory and remove it from there
-                    Models.Emoji toSell = new Models.Emoji
-                    {
-                        Unicode = emoji,
-                        Owner = Context.User.Id,
-                        Transactions = new List<Models.TransactionInfo>()
-                    };
+                    var (toSell, index) = inventory.Enumerate(emoji).Select((e, i) => (e, i)).OrderBy(e => e.e.Transactions.Count).First();
 
-                    toSell.EmojiId = Context.EmojiCollection.Insert(toSell);
+                    inventory.RemoveEmoji(emoji, index);
 
                     MarketHelper.AddListing(Context, MarketId(market), toSell, price);
-                    await ReplyAsync($"Posted your {emoji} for {Context.Money(price)}");
+                    inventory.Save();
+                    await ReplyAsync($"Posted your {emoji} for {Context.Money(price)} in {Context.GetMarketName(MarketId(market))}");
                 }, r => Task.CompletedTask);
         }
     }

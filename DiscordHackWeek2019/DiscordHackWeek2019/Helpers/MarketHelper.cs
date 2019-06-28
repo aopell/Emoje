@@ -24,10 +24,9 @@ namespace DiscordHackWeek2019.Helpers
                 SellerId = context.User.Id,
                 EmojiId = emoji.EmojiId,
                 Price = price,
-                Timestamp = DateTimeOffset.Now
             };
 
-            context.Bot.Clerk.Queue(PostListing.InMarket(emoji.Unicode, marketId, toAdd));
+            context.Bot.Clerk.Queue(PostListing.InMarket(emoji.Unicode, marketId, toAdd, true));
 
             return toAdd;
         }

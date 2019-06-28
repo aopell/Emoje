@@ -54,6 +54,15 @@ namespace DiscordHackWeek2019.Helpers
 
         public IEnumerable<Emoji> Enumerate(string emoji) => User.Inventory[emoji].Select(id => Context.EmojiCollection.FindById(id));
 
+        public bool HasEmoji(string emoji) => (User.Inventory.GetValueOrDefault(emoji, null)?.Count ?? 0) > 0;
+
+        public void RemoveEmoji(string emoji, int index)
+        {
+            if (User.Inventory[emoji].Count == 1) User.Inventory.Remove(emoji);
+            else User.Inventory[emoji].RemoveAt(index);
+            dirty = true;
+        }
+
         public void Add(Emoji emoji, bool brandNew = false)
         {
             emoji.Owner = UserId;

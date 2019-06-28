@@ -84,5 +84,20 @@ namespace DiscordHackWeek2019.Commands.Modules
             Context.UserCollection.Update(thing);
             await ReplyAsync("Ok!");
         }
+
+        [Command("give")]
+        public async Task GiveEmoji(Discord.IUser user, string emoji)
+        {
+            var thing = Context.GetInventory(user);
+
+            thing.Add(new Models.Emoji
+            {
+                Unicode = emoji,
+                Transactions = new List<Models.TransactionInfo>(),
+            }, true);
+
+            thing.Save();
+            await ReplyAsync("Ok!");
+        }
     }
 }
