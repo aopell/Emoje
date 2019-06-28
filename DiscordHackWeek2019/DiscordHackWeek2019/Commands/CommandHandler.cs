@@ -98,7 +98,7 @@ namespace DiscordHackWeek2019.Commands
                         break;
                     case CommandError.UnmetPrecondition:
                         embed.WithTitle("Error Executing Command");
-                        embed.WithDescription("You do not have permission to use this command here.");
+                        embed.WithDescription(result.ErrorReason == "" ? "You do not have permission to use this command here." : result.ErrorReason);
                         break;
                     case CommandError.UnknownCommand:
                         // Do nothing

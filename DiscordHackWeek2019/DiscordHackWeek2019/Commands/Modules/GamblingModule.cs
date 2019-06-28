@@ -17,7 +17,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
             [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
-            public async Task Buy(int count = 1, string type = "normal")
+            public async Task Buy([Summary("How many boxes to buy")] int count = 1, [Summary("The type of box to buy")] string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
                 if (!availableVarieties.Contains(type)) throw new DiscordCommandException($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
@@ -54,15 +54,15 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
 
             [Command("open"), Summary("Open one or more lootboxes, buying them if you don't own enough")]
-            public async Task Open(int count = 1, string type = "normal")
+            public async Task Open([Summary("How many boxes to open")] int count = 1, [Summary("The type of box to open")] string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
-                if (!availableVarieties.Contains(type)) await ReplyAsync($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
+                if (!availableVarieties.Contains(type)) throw new DiscordCommandException($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "\"" : "one of these:\n")}{string.Join(", ", availableVarieties)}{(availableVarieties.Count == 1 ? "\"" : "")}");
 
                 if (count > 5)
                 {
                     count = 5;
-                    await ReplyAsync("You can only open 5 boxes at a time!");
+                    await ReplyAsync($"{Context.User.Mention}, you can only open 5 boxes at a time");
                 }
 
                 var inventory = Context.GetInventory(Context.User);
@@ -73,24 +73,32 @@ namespace DiscordHackWeek2019.Commands.Modules
                 if (available >= count)
                 {
                     inventory.RemoveBoxes(type, count);
-                    var open = Open(inventory, variety, count);
-                    
+                    await ReplyAsync($"{Context.User.Mention}, you only had {available} to open");
+                    await Open(inventory, variety, count);
                     return;
                 }
 
-                if (available == 0 && inventory.Currency < variety.Cost) throw new DiscordCommandException($"Sorry, {Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
+                if (available == 0 && inventory.Currency < variety.Cost) throw new DiscordCommandException($"{Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
 
                 int needToBuy = count - available;
 
                 int canBuy = Math.Min(inventory.Currency / variety.Cost, needToBuy);
+
+                if (canBuy == 0)
+                {
+                    inventory.RemoveBoxes(type, available);
+                    await Open(inventory, variety, available);
+                    return;
+                }
+
                 int cost = canBuy * variety.Cost;
 
                 int toOpen = available + canBuy;
 
                 string text;
 
-                if (needToBuy > canBuy) text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")} right now, and you can only afford {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")}, do you still want to purchase {(canBuy == 1 ? "it" : "them")} for {Context.Money(cost)} and open {(toOpen == 1 ? "one" : toOpen.ToString())}?";
-                else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {available}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+                if (needToBuy > canBuy) text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {(available == 1 ? "one" : available.ToString())}")} right now, and you can only afford {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")}, do you still want to purchase {(canBuy == 1 ? "it" : "them")} for {Context.Money(cost)} and open {(toOpen == 1 ? "one" : toOpen.ToString())}?";
+                else text = $"{Context.User.Mention}, you {(available == 0 ? "don't have any" : $"have {(available == 1 ? "one" : available.ToString())}")}, are you sure you want to buy {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)} and open the {(toOpen == 1 ? "one" : toOpen.ToString())}?";
 
                 var message = await Context.Channel.SendMessageAsync(text);
                 ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,

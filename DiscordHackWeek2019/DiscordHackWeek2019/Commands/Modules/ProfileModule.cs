@@ -29,7 +29,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 Transactions = new List<TransactionInfo>()
             });
 
-            await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Bot.Options.StartingCurrency} currency has been deposited to your account.");
+            await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Money(Context.Bot.Options.StartingCurrency)} has been deposited to your account.");
         }
 
         [Command("profile"), Summary("Displays the profile of yourself or another user"), JoinRequired]

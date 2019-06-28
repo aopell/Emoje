@@ -26,11 +26,11 @@ namespace DiscordHackWeek2019.Commands.Modules
 
         private ulong MarketId(Market market) => market == 0 ? 0 : Context.Guild.Id;
 
-        [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in the global market")]
-        public async Task ViewListings(string emoji = "all", [Remainder] string sorting = "lowest") => await ViewListings(Market.Global, emoji, sorting);
+        [Command("listings"), Alias("view", "see", "check", "l", "v"), Summary("Views market listings in the global market")]
+        public async Task ViewListings([Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest") => await ViewListings(Market.Global, emoji, sorting);
 
-        [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in either the global or local markets")]
-        public async Task ViewListings(Market m, string emoji = "all", [Remainder] string sorting = "lowest")
+        [Command("listings"), Alias("view", "see", "check", "l", "v"), Summary("Views market listings in either the global or local markets")]
+        public async Task ViewListings([Summary("Which market to see listings in; either \"global\" or the \"local\" server market")] Market m, [Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest")
         {
             string[] HIGH_TO_LOW = { "highest", "highest first", "highest to lowest", "greatest to least", "expensive", "pricy", "g2l", "h2l" };
             string[] LOW_TO_HIGH = { "lowest", "lowest first", "lowest to highest", "least to greatest", "cheap", "affordable", "l2g", "l2h" };
