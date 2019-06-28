@@ -55,7 +55,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync(embed: embed.Build());
         }
 
-        [Command("inventory"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
+        [Command("inventory"), Alias("i", "inv"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
         public async Task ViewInventory([Remainder] IUser user = null)
         {
             // Get a list of emojis
