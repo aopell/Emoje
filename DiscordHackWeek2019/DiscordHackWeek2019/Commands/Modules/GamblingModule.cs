@@ -117,7 +117,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 foreach (var (type, count) in Context.CallerProfile.LootBoxes)
                 {
-                    if (count > 0) message.Append($"{(count == 1 ? "one" : count.ToString())} {type} lootbox");
+                    if (count > 0) message.Append($"{(count == 1 ? "one" : count.ToString())} {type} lootbox{(count == 1 ? "" : "es")}");
                 }
 
                 if (message.Length == 0)
