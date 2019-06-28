@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
+using DiscordHackWeek2019.Models;
+using Discord;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("market"), JoinRequired]
+    [Group("market"), Alias("m"), JoinRequired]
     public class MarketModule : ModuleBase<BotCommandContext>
     {
         public enum Market
@@ -24,36 +26,85 @@ namespace DiscordHackWeek2019.Commands.Modules
 
         private ulong MarketId(Market market) => market == 0 ? 0 : Context.Guild.Id;
 
-        [Command("listings"), Alias("view"), Summary("Views market listings in the global market")]
-        public Task ViewListings() => ViewListings(Market.Global);
+        [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in the global market")]
+        public Task ViewListings(string emoji = "all", [Remainder] string sorting = "lowest") => ViewListings(Market.Global, emoji, sorting);
 
-        [Command("listings"), Alias("view"), Summary("Views market listings in either the global or local markets")]
-        public async Task ViewListings(Market market, string emoji = "all", [Remainder] string sorting = "lowest")
+        [Command("listings"), Alias("view", "l", "v"), Summary("Views market listings in either the global or local markets")]
+        public async Task ViewListings(Market m, string emoji = "all", [Remainder] string sorting = "lowest")
         {
-            switch (sorting)
-            {
-                case "highest":
-                case "highest to lowest":
-                case "greatest to least":
-                case "g2l":
-                case "h2l":
-                    break;
-                case "lowest":
-                case "lowest to highest":
-                case "lowest to ":
-                case "cheap":
-                case "l2g":
-                case "l2h":
-                default:
+            string[] HIGH_TO_LOW = { "highest", "highest first", "highest to lowest", "greatest to least", "expensive", "pricy", "g2l", "h2l" };
+            string[] LOW_TO_HIGH = { "lowest", "lowest first", "lowest to highest", "least to greatest", "cheap", "affordable", "l2g", "l2h" };
 
-                    break;
+            var market = MarketHelper.GetOrCreate(Context.MarketCollection, MarketId(m));
+
+            IEnumerable<(string e, Listing l)> listings;
+            if (emoji == "all")
+            {
+                listings = market.Listings.SelectMany(kv => kv.Value.Select(l => (kv.Key, l)));
+                
+                if (listings.Count() == 0)
+                {
+                    await ReplyAsync($"There are no listings in {Context.GetMarketName(MarketId(m))}");
+                    return;
+                }
             }
+            else
+            {
+                if (!EmojiHelper.IsValidEmoji(emoji))
+                {
+                    await ReplyAsync($"{emoji} cannot be bought or sold");
+                    return;
+                }
+
+                if (!market.Listings.ContainsKey(emoji))
+                {
+                    await ReplyAsync($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(m))}");
+                    return;
+                }
+
+                listings = market.Listings[emoji].Select(l => (emoji, l));
+            }
+
+            if (HIGH_TO_LOW.Contains(sorting.Trim()))
+            {
+                listings = listings.OrderByDescending(p => p.l.Price);
+            }
+            else
+            {
+                listings = listings.OrderBy(p => p.l.Price);
+            }
+
+            string title = $"{(emoji == "all" ? "All listings" : emoji)} in {Context.GetMarketName(MarketId(m))}";
+
+            const int NUM_PER_PAGE = 10;
+
+            int totalPages = (listings.Count() + NUM_PER_PAGE - 1) / NUM_PER_PAGE;
+
+            Embed getPage(int page)
+            {
+                EmbedBuilder builder = new EmbedBuilder();
+                StringBuilder stringBuilder = new StringBuilder();
+                List<string> contents = new List<string>();
+                foreach (var (e, listing) in listings.Skip((page - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE))
+                {
+                    stringBuilder.Append($"{e} for {Context.Money(listing.Price)} by {(m == Market.G ? Context.Bot.Client.GetUser(listing.SellerId).ToString() : Context.WhatDoICall(listing.SellerId))}\n");
+                }
+
+                builder.AddField(new EmbedFieldBuilder().WithName(title).WithValue(stringBuilder.ToString()));
+                builder.Footer = new EmbedFooterBuilder().WithText($"Page {page} of {totalPages}");
+
+                return builder.Build();
+            }
+
+            var message = await ReplyAsync(embed: getPage(1));
+
+            ReactionMessageHelper.CreatePaginatedMessage(Context, message, totalPages, 1, pg => Task.FromResult(("", getPage(pg.CurrentPage))));
         }
 
-        [Command("buy"), Alias("purchase", "order"), Summary("Purchase an emoji from the global market")]
+        [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from the global market")]
         public async Task BuyEmoji(string emoji) => BuyEmoji(Market.Global, emoji);
 
-        [Command("buy"), Alias("purchase", "order"), Summary("Purchase an emoji from either the global or local markets")]
+        [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from either the global or local markets")]
         public async Task BuyEmoji(Market market, string emoji)
         {
             if (!EmojiHelper.IsValidEmoji(emoji))
@@ -81,10 +132,10 @@ namespace DiscordHackWeek2019.Commands.Modules
             MarketHelper.BuyListing(Context, MarketId(market), emoji, Context.User.Id);
         }
 
-        [Command("sell"), Alias("offer"), Summary("Put one of your emoji up for sale on the global market")]
+        [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale on the global market")]
         public async Task SellEmoji(string emoji, int price) => SellEmoji(Market.Global, emoji, price);
 
-        [Command("sell"), Alias("offer"), Summary("Put one of your emoji up for sale in either the global or local markets")]
+        [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale in either the global or local markets")]
         public async Task SellEmoji(Market market, string emoji, int price)
         {
             if (!EmojiHelper.IsValidEmoji(emoji))
@@ -103,7 +154,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (price <= 0)
             {
-                await ReplyAsync($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")} no money");
+                await ReplyAsync($"{Context.User.Mention}, you can't sell things for {(price == 0 ? "" : "less than ")}no money");
                 return;
             }
 

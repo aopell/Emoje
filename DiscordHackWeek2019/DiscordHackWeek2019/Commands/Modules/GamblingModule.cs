@@ -32,7 +32,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 if (inventory.Currency < variety.Cost)
                 {
-                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford one.");
+                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford to buy one");
                     return;
                 }
 
@@ -92,7 +92,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 if (available == 0 && inventory.Currency < variety.Cost)
                 {
-                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford one");
+                    await ReplyAsync($"Sorry, {Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
                     return;
                 }
 
@@ -114,7 +114,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     {
                         var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
-                        inventory.RemoveBoxes(type, available);
+                        if (available > 0) inventory.RemoveBoxes(type, available);
 
                         await Open(inventory, variety, toOpen);
                         await modify;
