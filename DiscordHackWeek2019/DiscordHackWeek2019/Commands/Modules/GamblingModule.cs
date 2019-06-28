@@ -16,7 +16,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Group("lootbox"), Alias("box", "lootboxes"), JoinRequired]
         public class LootBoxModule : ModuleBase<BotCommandContext>
         {
-            [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes, opening it instantly")]
+            [Command("buy"), Alias("purchase"), Summary("Buy one or more lootboxes")]
             public async Task Buy(int count = 1, string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
@@ -61,7 +61,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     });
             }
 
-            [Command("open"), Summary("Open a lootbox")]
+            [Command("open"), Summary("Open one or more lootboxes, buying them if you don't own enough")]
             public async Task Open(int count = 1, string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
@@ -118,14 +118,28 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
 
             [Command("view"), Summary("View your currently owned loot boxes")]
-            public Task View()
+            public async Task View()
             {
-                throw new NotImplementedException();
+                StringBuilder message = new StringBuilder();
+
+                foreach (var (type, count) in Context.CallerProfile.LootBoxes)
+                {
+                    if (count > 0) message.Append($"{(count == 1 ? "one" : count.ToString())} {type} lootbox");
+                }
+
+                if (message.Length == 0)
+                {
+                    message.Append("no lootboxes");
+                }
+
+                await ReplyAsync($"{Context.User.Mention}, you have {message}");
             }
 
             private async Task Open(InventoryWrapper inventory, LootBox variety, int count)
             {
                 StringBuilder message = new StringBuilder();
+
+                var toWait = new List<Task>();
 
                 for (int i = 0; i < count; i++)
                 {
@@ -138,17 +152,23 @@ namespace DiscordHackWeek2019.Commands.Modules
                             Owner = Context.User.Id,
                             Transactions = new List<TransactionInfo>() { Context.Bot.Clerk.Queue(trans).Receive() },
                             Unicode = emoji
-                        });
+                        }, true);
 
-                        message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket} ");
+                        message.Append($"{rarity.LeftBracket}{emoji}{rarity.RightBracket}");
                     }
                     message.AppendLine();
+
+                    if (i != 0 && i % 4 == 0)
+                    {
+                        toWait.Add(ReplyAsync(message.ToString()));
+                        message.Clear();
+                    }
                 }
 
-                var reply = ReplyAsync(message.ToString());
+                if (message.Length > 0) toWait.Add(ReplyAsync(message.ToString()));
 
                 inventory.Save();
-                await reply;
+                Task.WaitAll(toWait.ToArray());
             }
         }
     }

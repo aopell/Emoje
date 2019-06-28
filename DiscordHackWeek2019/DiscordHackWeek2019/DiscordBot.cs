@@ -35,7 +35,7 @@ namespace DiscordHackWeek2019
             MainInstance.Random = new Random();
 
             MainInstance.DataProvider = new LiteDatabase("data.db");
-            EmojiHelper.Initialize("Config/emoji.tsv");
+            EmojiHelper.Initialize("Config/emoji.tsv", MainInstance.Random);
 
             MainInstance.Client.Log += MainInstance.Log;
             MainInstance.Client.Ready += MainInstance.Client_Ready;
