@@ -8,6 +8,8 @@ using System.Threading.Tasks;
 using ReactionAction = System.Func<DiscordHackWeek2019.Helpers.ReactionMessage, System.Threading.Tasks.Task>;
 using CustomReactionAction = System.Func<DiscordHackWeek2019.Helpers.ReactionMessage, string, System.Threading.Tasks.Task>;
 using PageAction = System.Func<DiscordHackWeek2019.Helpers.PaginatedMessage, System.Threading.Tasks.Task<(string, Discord.Embed)>>;
+using Discord.WebSocket;
+using System.Linq;
 
 namespace DiscordHackWeek2019.Helpers
 {
@@ -49,16 +51,49 @@ namespace DiscordHackWeek2019.Helpers
             ReactionMessageCache.Add(message.Id.ToString(), reactionMessage, new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMilliseconds(timeout), RemovedCallback = onTimeout == null ? null : (CacheEntryRemovedCallback)(_ => onTimeout()) });
         }
 
-        public static ReactionMessage GetReactionMessageById(ulong id)
+        private static ReactionMessage GetReactionMessageById(ulong id)
         {
             if (!ReactionMessageCache.Contains(id.ToString())) return null;
 
             return ReactionMessageCache.Get(id.ToString()) as ReactionMessage;
         }
 
-        public static void DeleteReactionMessage(ReactionMessage reactionMessage)
+        private static void DeleteReactionMessage(ReactionMessage reactionMessage)
         {
             ReactionMessageCache.Remove(reactionMessage.Message.ToString());
+        }
+
+        public static async Task HandleReactionMessage(ISocketMessageChannel channel, SocketSelfUser botUser, SocketReaction reaction, IUserMessage message)
+        {
+            if (message.Author.Id == botUser.Id && reaction.UserId != botUser.Id)
+            {
+                var reactionMessage = GetReactionMessageById(message.Id);
+                if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id && reactionMessage.AcceptsAllReactions || reactionMessage.AcceptedReactions.Contains(reaction.Emote.ToString()))
+                {
+                    try
+                    {
+                        await reactionMessage.RunAction(reaction.Emote);
+                    }
+                    catch (Exception ex)
+                    {
+                        await ExceptionMessageHelper.HandleException(ex, channel);
+                    }
+
+                    if (reactionMessage.AllowMultipleReactions)
+                    {
+                        await message.RemoveReactionAsync(reaction.Emote, reactionMessage.Context.User);
+                    }
+                    else
+                    {
+                        await message.RemoveAllReactionsAsync();
+                        DeleteReactionMessage(reactionMessage);
+                    }
+                }
+                else if (reactionMessage != null && reaction.User.IsSpecified)
+                {
+                    await message.RemoveReactionAsync(reaction.Emote, reaction.User.Value);
+                }
+            }
         }
     }
 
@@ -68,6 +103,7 @@ namespace DiscordHackWeek2019.Helpers
         public IUserMessage Message { get; }
         public bool AllowMultipleReactions { get; }
         public bool AcceptsAllReactions { get; }
+        public IEnumerable<string> AcceptedReactions => Actions.Keys;
         protected CustomReactionAction DefaultAction { get; }
         protected Dictionary<string, ReactionAction> Actions { get; }
 
