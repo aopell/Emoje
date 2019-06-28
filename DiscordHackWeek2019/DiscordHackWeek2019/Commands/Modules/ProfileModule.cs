@@ -42,7 +42,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             embed.WithTitle("Profile");
             embed.AddField("Currency", $"{Strings.moneyEmoji} " + profile.Currency, true);
             embed.AddField("Unique Emoji", $"{Strings.emojiEmoji} " + profile.Inventory.Count, true);
-            embed.AddField("Owned Loot Boxes", $"{Strings.boxEmoji} " + profile.LootBoxes.Count, true);
+            embed.AddField("Owned Loot Boxes", $"{Strings.boxEmoji} " + profile.LootBoxes.Sum(kv => kv.Value), true);
             embed.AddField("Transactions Completed", $"{Strings.transactionEmoji} " + profile.Transactions.Count, true);
             embed.AddField("Unique Stocks", $"{Strings.stockEmoji} " + profile.CurrentInvestments.Stocks.Items.Values.Count(x => x.Count > 0), true);
             embed.AddField("Unique Cryptocurrencies", $"{Strings.cryptoEmoji} " + profile.CurrentInvestments.Crypto.Items.Values.Count(x => x.Count > 0), true);
