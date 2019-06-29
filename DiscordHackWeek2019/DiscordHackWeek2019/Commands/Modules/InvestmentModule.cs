@@ -279,7 +279,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 List<string> contents = new List<string>();
                 foreach (var (t, name, investment) in investments.Skip((page - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE))
                 {
-                    stringBuilder.Append($"{(t == SymbolType.Crypto ? Strings.cryptoEmoji : Strings.stockEmoji)} {(t == SymbolType.Crypto ? "" : $"{(investment.Amount == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.PurchasePrice))}");
+                    stringBuilder.Append($"{(t == SymbolType.Crypto ? Strings.cryptoEmoji : Strings.stockEmoji)} {(t == SymbolType.Crypto ? $"{(investment.Amount == 1 ? "one " : $"{investment.Amount} ")}" : $"{(investment.Amount == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.PurchasePrice))}");
                     if (investment.SellPrice != null) stringBuilder.Append($", sold for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.SellPrice ?? 0))}");
                     stringBuilder.AppendLine();
                 }
