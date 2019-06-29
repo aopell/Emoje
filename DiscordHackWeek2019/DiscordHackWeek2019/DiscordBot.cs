@@ -77,33 +77,8 @@ namespace DiscordHackWeek2019
         private async Task Client_ReactionAdded(Cacheable<IUserMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketReaction reaction)
         {
             var message = await cachedMessage.GetOrDownloadAsync();
-
-            if (message.Author.Id == Client.CurrentUser.Id && reaction.UserId != Client.CurrentUser.Id)
-            {
-                var reactionMessage = ReactionMessageHelper.GetReactionMessageById(message.Id);
-                if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id)
-                {
-                    try
-                    {
-                        await reactionMessage.RunAction(reaction.Emote);
-                    }
-                    catch (Exception ex)
-                    {
-                        await channel.SendMessageAsync(ex.ToString());
-                    }
-
-                    if (reactionMessage.AllowMultipleReactions)
-                    {
-                        await message.RemoveReactionAsync(reaction.Emote, reactionMessage.Context.User);
-                    }
-                    else
-                    {
-                        await message.RemoveAllReactionsAsync();
-                        ReactionMessageHelper.DeleteReactionMessage(reactionMessage);
-                    }
-                }
-            }
-        }
+            await ReactionMessageHelper.HandleReactionMessage(channel, Client.CurrentUser, reaction, message);
+        } 
 
         private static void CurrentDomain_ProcessExit(object sender, EventArgs e)
         {

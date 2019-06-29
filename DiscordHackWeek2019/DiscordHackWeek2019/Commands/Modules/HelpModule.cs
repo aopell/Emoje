@@ -16,10 +16,10 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command, Summary("Displays all available commands and how to use them")]
         public async Task Help(int page = 1)
         {
-            if (page <= 0) throw new ArgumentOutOfRangeException(nameof(page), "Page must be positive and nonzero");
+            if (page <= 0) throw new DiscordCommandException("Page must be positive and nonzero");
             const int NUM_PER_PAGE = 5;
             int totalPages = (int)Math.Ceiling(HelpHelper.AllCommands.Count / (double)NUM_PER_PAGE);
-            if (page > totalPages) throw new IndexOutOfRangeException($"Can't go to page {page}, there are only {totalPages}");
+            if (page > totalPages) throw new DiscordCommandException($"Can't go to page {page}, there are only {totalPages}");
 
             ReactionMessageHelper.CreatePaginatedMessage(Context, await ReplyAsync(embed: buildPage(page)), totalPages, page, m =>
             {
@@ -43,7 +43,14 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command, Summary("Displays help for a specific command")]
         public async Task Help([Remainder] string command)
         {
+            bool detailed = true;
             var commands = HelpHelper.AllCommands.Where(c => c.Command == command);
+            if(!commands.Any())
+            {
+                detailed = false;
+                commands = HelpHelper.AllCommands.Where(c => c.Command.StartsWith(command + " "));
+            }
+            if (!commands.Any()) throw new DiscordCommandException("No matching commands found");
             EmbedBuilder result = new EmbedBuilder();
             result.WithTitle("Help");
             foreach (var c in commands)
@@ -51,13 +58,14 @@ namespace DiscordHackWeek2019.Commands.Modules
                 StringBuilder info = new StringBuilder();
                 info.AppendLine(c.Summary ?? "*No help text provided*");
                 info.AppendLine();
-                if (c.Parameters.Count > 0)
+                if (detailed && c.Parameters.Count > 0)
                 {
                     info.AppendLine("**Parameters**");
                     foreach (var param in c.Parameters)
                     {
                         info.AppendLine($"`{(param.Optional ? "Optional " : "")}{param.Type} {param.Name}{(param.Remainder ? "..." : "")}{(param.Optional ? $" = {param.DefaultValue}" : "")}`{(!string.IsNullOrEmpty(param.Summary) ? $" - *{param.Summary}*" : "")}");
                     }
+                    info.AppendLine();
                 }
 
                 result.AddField(c.ToString(), info.ToString());

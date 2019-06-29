@@ -16,12 +16,12 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task Buy(SymbolType type, string symbol, int amount = 1)
         {
             symbol = symbol.ToLower();
-            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive and nonzero");
+            if (amount <= 0) throw new DiscordCommandException("Amount must be positive and nonzero");
 
             var profile = Context.CallerProfile;
             var info = await StockAPIHelper.GetSymbolInfo(symbol, type);
 
-            if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
+            if (profile.Currency < info.LatestPrice * amount) throw new DiscordCommandException("You do not have enough currency to make this purchase");
 
             ReactionMessageHelper.CreateConfirmReactionMessage(Context, await ReplyAsync($"Purchase {amount} x {symbol.ToUpper()} for {(int)(info.LatestPrice * amount)} currency. You currently have {profile.Currency} currency."), onPurchase, onReject, false, 30000);
 
@@ -29,7 +29,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 Context.ClearCachedValues();
                 profile = Context.CallerProfile;
-                if (profile.Currency < info.LatestPrice * amount) throw new ArgumentOutOfRangeException(nameof(amount), "You do not have enough currency to make this purchase");
+                if (profile.Currency < info.LatestPrice * amount) throw new DiscordCommandException("You do not have enough currency to make this purchase");
 
                 profile.Currency -= (int)(info.LatestPrice * amount);
                 var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
@@ -60,14 +60,14 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task Sell(SymbolType type, string symbol, int amount = 1)
         {
             symbol = symbol.ToLower();
-            if (amount <= 0) throw new ArgumentOutOfRangeException(nameof(amount), "Amount must be positive and nonzero");
+            if (amount <= 0) throw new DiscordCommandException("Amount must be positive and nonzero");
 
             var profile = Context.CallerProfile;
             var portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
             var matching = portfolio.Items.GetValueOrDefault(symbol);
 
-            if (matching == null) throw new KeyNotFoundException("You don't have any investments with that symbol");
-            if (matching.Count < amount) throw new ArgumentOutOfRangeException(nameof(amount), $"You only have {matching.Count} investments but attempted to sell {amount}.");
+            if (matching == null) throw new DiscordCommandException("You don't have any investments with that symbol");
+            if (matching.Count < amount) throw new DiscordCommandException($"You only have {matching.Count} investments but attempted to sell {amount}.");
 
             var info = await StockAPIHelper.GetSymbolInfo(symbol, type);
 
@@ -82,8 +82,8 @@ namespace DiscordHackWeek2019.Commands.Modules
                 portfolio = type == SymbolType.Stock ? profile.CurrentInvestments.Stocks : profile.CurrentInvestments.Crypto;
                 matching = portfolio.Items.GetValueOrDefault(symbol);
 
-                if (matching == null) throw new KeyNotFoundException("You don't have any investments with that symbol");
-                if (matching.Count < amount) throw new ArgumentOutOfRangeException(nameof(amount), $"You only have {matching.Count} investments but attempted to sell {amount}.");
+                if (matching == null) throw new DiscordCommandException("You don't have any investments with that symbol");
+                if (matching.Count < amount) throw new DiscordCommandException($"You only have {matching.Count} investments but attempted to sell {amount}.");
 
                 var toSell = matching.OrderByDescending(x => Math.Abs(info.LatestPrice - x.PurchasePrice)).Take(amount).ToList();
                 int totalPurchaseAmount = (int)toSell.Sum(x => x.PurchasePrice);
