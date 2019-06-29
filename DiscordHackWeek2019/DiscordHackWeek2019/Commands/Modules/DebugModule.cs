@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
@@ -104,10 +106,11 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             for (int i = 0; i < amount; i++)
             {
+                var trans = Models.Transaction.FromLootbox(marketId: 0, buyer: thing.UserId, "Admin");
                 thing.Add(new Models.Emoji
                 {
                     Unicode = emoji,
-                    Transactions = new List<Models.TransactionInfo>(),
+                    Transactions = new List<Models.TransactionInfo>() { Context.Bot.Clerk.Queue(trans).Receive() },
                 }, true);
             }
 

@@ -33,6 +33,7 @@ namespace DiscordHackWeek2019.Helpers
                 int lineNo = trace.GetFrame(0).GetFileLineNumber();
 
                 embed.WithFooter($"{ex.GetType().Name} at {fileName}:{lineNo}");
+                Console.WriteLine($"Error: {ex.GetType().Name} at {fileName}:{lineNo}");
             }
 
             await channel.SendMessageAsync(embed: embed.Build());
