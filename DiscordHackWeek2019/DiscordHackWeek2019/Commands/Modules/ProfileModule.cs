@@ -40,7 +40,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             var embed = Context.EmbedFromUser(user);
             embed.WithTitle("Profile");
             embed.AddField("Currency", $"{Strings.moneyEmoji} " + profile.Currency, true);
-            embed.AddField("Unique Emoji", $"{Strings.emojiEmoji} " + profile.Inventory.Count, true);
+            embed.AddField("Unique Emoji", $"{Strings.emojiEmoji} " + $"{profile.Inventory.Count}/{Helpers.EmojiHelper.IterateAllEmoji.Count}", true);
             embed.AddField("Owned Loot Boxes", $"{Strings.boxEmoji} " + profile.LootBoxes.Sum(kv => kv.Value), true);
             embed.AddField("Transactions Completed", $"{Strings.transactionEmoji} " + profile.Transactions.Count, true);
             embed.AddField("Unique Stocks", $"{Strings.stockEmoji} " + profile.Investments.Stocks.Active.Values.Count(x => x.Count > 0), true);
@@ -78,8 +78,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (emojisCount.Keys.Count == 0)
             {
-                await ReplyAsync("You don't have any emojis!!!");
-                return;
+                throw new DiscordCommandException("You don't have any emojis. Go get some!!!");
             }
 
             int inLineCount = 1;
@@ -113,14 +112,22 @@ namespace DiscordHackWeek2019.Commands.Modules
             });
         }
 
-        [Command("details"), Summary("View all of one emoji you own"), JoinRequired]
-        public async Task ViewInventory(string emoji)
+        [Command("details"), Summary("See more details about emoji you own"), JoinRequired]
+        public async Task ViewDetails(string emoji)
         {
             if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought, sold, or owned");
 
             // Get a list of emojis
             Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, Context.User.Id);
-            var emojis = inventory.Enumerate(emoji);
+            IEnumerable<Models.Emoji> emojis;
+            try
+            {
+                emojis = inventory.Enumerate(emoji);
+            }
+            catch
+            {
+                throw new DiscordCommandException($"You do not have anything that matches {emoji}");
+            }
 
             List<string> contents = new List<string>();
             foreach (var e in emojis)
@@ -128,7 +135,71 @@ namespace DiscordHackWeek2019.Commands.Modules
                 contents.Add($"{e.Unicode}: {e.EmojiId}");
             }
 
-            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Details:", 15);
+            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emoji: ID", 15);
+            if (embeds.Count == 0)
+            {
+                throw new DiscordCommandException($"You do not have anything that matches {emoji}");
+            }
+
+            var message = await ReplyAsync(embed: embeds[0].Build());
+            Helpers.ReactionMessageHelper.CreatePaginatedMessage(Context, message, embeds.Count, 1, m =>
+            {
+                return Task.FromResult(($"", embeds[m.CurrentPage - 1].Build()));
+            });
+        }
+
+        [Command("history"), Summary("See more details about an emoji"), JoinRequired]
+        public async Task ViewHistory(string id, IUser owner = null)
+        {
+            Guid guid;
+            try
+            {
+                guid = Guid.Parse(id);
+            }
+            catch
+            {
+                throw new DiscordCommandException($"Could not parse that id. Try getting an emoji id with `+details`.");
+            }
+
+            Models.Emoji emoji = Context.Bot.DataProvider.GetCollection<Models.Emoji>("emoji").FindById(guid);
+
+            if (emoji == null)
+            {
+                throw new DiscordCommandException($"Could not find an emoji with that id.");
+            }
+
+            List<TransactionInfo> transactions = emoji.Transactions;
+            List<string> contents = new List<string>();
+
+            foreach(var t in transactions)
+            {
+                var market = Context.Bot.DataProvider.GetCollection<Models.Market>("markets").GetById(t.MarketId);
+                //var tInfo = market.Transactions.OrderBy(e => e.TransactionId).FirstOrDefault();
+                var tInfo = market.Transactions[(int)t.TransactionId];
+                if (tInfo == null)
+                {
+                    continue;
+                }
+
+                if(tInfo.Data.GetType() == typeof(FromLootbox))
+                {
+                    var data = (FromLootbox)tInfo.Data;
+                    var buyer = DiscordBot.MainInstance.Client.GetUser(data.Acquisitor);
+                    contents.Add($"{buyer.Username}#{buyer.Discriminator} received from a {data.LootboxType} lootbox");
+                }
+                else if (tInfo.Data.GetType() == typeof(BetweenUsers))
+                {
+                    var data = (BetweenUsers)tInfo.Data;
+                    var buyer = DiscordBot.MainInstance.Client.GetUser(data.Acquisitor);
+                    contents.Add($"{buyer.Username}#{buyer.Discriminator} bought for e̩̍{data.Price}");
+                }
+            }
+
+            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, $"{emoji.Unicode} - {guid.ToString()}", 15);
+            if (embeds.Count == 0)
+            {
+                throw new DiscordCommandException($"This {emoji.Unicode} has no history");
+            }
 
             var message = await ReplyAsync(embed: embeds[0].Build());
             Helpers.ReactionMessageHelper.CreatePaginatedMessage(Context, message, embeds.Count, 1, m =>
