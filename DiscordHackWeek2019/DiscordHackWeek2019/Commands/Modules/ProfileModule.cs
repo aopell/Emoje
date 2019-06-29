@@ -140,7 +140,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 contents.Add($"{e.Unicode}: {e.EmojiId} ({e.Transactions.Count})");
             }
 
-            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emoji: ID", 15);
+            var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emoji: ID (# transactions)", 15);
             if (embeds.Count == 0)
             {
                 throw new DiscordCommandException("Bad emoji", $"You do not have anything that matches {emoji}");
