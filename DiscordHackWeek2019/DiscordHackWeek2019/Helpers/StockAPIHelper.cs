@@ -13,7 +13,7 @@ namespace DiscordHackWeek2019.Helpers
     {
         private static string Token => DiscordBot.MainInstance.Secret.IexCloudSecret;
 
-        private static string GenerateQuoteUrl(string symbol) => $"https://sandbox.iexapis.com/stable/stock/{symbol}/quote?token={Token}";
+        private static string GenerateQuoteUrl(string symbol) => $"https://cloud.iexapis.com/stable/stock/{symbol}/quote?token={Token}";
 
         private static ObjectCache StockCache = new MemoryCache("stocks");
         private static readonly CacheItemPolicy Policy = new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(5) };
