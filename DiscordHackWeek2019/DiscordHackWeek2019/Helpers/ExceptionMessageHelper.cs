@@ -18,7 +18,7 @@ namespace DiscordHackWeek2019.Helpers
 
             if (ex is DiscordCommandException dex)
             {
-                embed.WithTitle("Error Executing Command");
+                embed.WithTitle(dex.Title);
                 embed.WithColor(Color.Red);
                 embed.WithDescription(dex.Message);
             }

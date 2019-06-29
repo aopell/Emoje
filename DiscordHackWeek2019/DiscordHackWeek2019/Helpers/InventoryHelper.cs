@@ -42,7 +42,7 @@ namespace DiscordHackWeek2019.Helpers
             }
         }
 
-        public int Currency
+        public long Currency
         {
             get => User.Currency;
             set => User.Currency = value;
@@ -92,7 +92,7 @@ namespace DiscordHackWeek2019.Helpers
             dirty = true;
         }
 
-        public int GetNumLootBoxes(string variety) => User.LootBoxes.GetValueOrDefault<string, int>(variety, 0);
+        public int GetNumLootBoxes(string variety) => User.LootBoxes.GetValueOrDefault(variety, 0);
 
         public void AddLoot(string variety, int count = 1)
         {

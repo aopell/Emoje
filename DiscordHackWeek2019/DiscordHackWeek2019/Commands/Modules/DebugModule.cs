@@ -64,7 +64,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task RaritiesMessage()
         {
             string message;
-            var emotes = Helpers.MarketHelper.GetRarities(Context.Bot, 0);
+            var emotes = MarketHelper.GetRarities(Context.Bot, 0);
             foreach (var rarity in Rarity.Rarities)
             {
                 message = $"```\n{rarity.Label}:\n";
@@ -88,7 +88,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("currency"), Alias("money")]
-        public async Task SetCurrency(Discord.IUser user, int amount)
+        public async Task SetCurrency(IUser user, long amount)
         {
             var thing = Context.UserCollection.GetById(user.Id);
             thing.Currency = amount;

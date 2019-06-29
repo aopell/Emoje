@@ -58,7 +58,7 @@ namespace DiscordHackWeek2019.Models
     public class BetweenUsers : TransactionData
     {
         public ulong Seller { get; set; }
-        public int Price { get; set; }
+        public long Price { get; set; }
     }
 
     public class FromLootbox : TransactionData

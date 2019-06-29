@@ -23,7 +23,7 @@ namespace DiscordHackWeek2019.Helpers
     public class LootBox
     {
         public string Name { get; set; }
-        public int Cost { get; set; }
+        public long Cost { get; set; }
         public int Items => RarityRatios.Length;
         public int[][] RarityRatios { get; set; }
         public Emote Emote { get; set; }

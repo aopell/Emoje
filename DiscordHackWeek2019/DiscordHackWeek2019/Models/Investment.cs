@@ -6,6 +6,7 @@ namespace DiscordHackWeek2019.Models
 {
     public class Investment
     {
+        public long Amount { get; set; }
         public float PurchasePrice { get; set; }
         public DateTimeOffset PurchaseTimestamp { get; set; }
         public float? SellPrice { get; set; }
@@ -14,11 +15,13 @@ namespace DiscordHackWeek2019.Models
 
     public class InvestmentPortfolio
     {
-        public Dictionary<string, List<Investment>> Items { get; set; }
+        public Dictionary<string, List<Investment>> Active { get; set; }
+        public Dictionary<string, List<Investment>> Old { get; set; }
 
         public InvestmentPortfolio()
         {
-            Items = new Dictionary<string, List<Investment>>();
+            Active = new Dictionary<string, List<Investment>>();
+            Old = new Dictionary<string, List<Investment>>();
         }
     }
 

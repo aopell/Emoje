@@ -9,7 +9,7 @@ namespace DiscordHackWeek2019.Models
     {
         public ulong SellerId { get; set; }
         public Guid EmojiId { get; set; }
-        public int Price { get; set; }
+        public long Price { get; set; }
         public DateTimeOffset Timestamp { get; set; }
     }
 }

@@ -20,16 +20,16 @@ namespace DiscordHackWeek2019.Commands.Modules
             public async Task Buy([Summary("How many boxes to buy")] int count = 1, [Summary("The type of box to buy")] string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
-                if (!availableVarieties.Contains(type)) throw new DiscordCommandException($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "" : "one of these:\n")}{string.Join(", ", availableVarieties)}");
+                if (!availableVarieties.Contains(type)) throw new DiscordCommandException("Bad lootbox type", $"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "\"" : "one of these:\n")}{string.Join(", ", availableVarieties)}{(availableVarieties.Count == 1 ? "\"" : "")}");
 
                 var variety = LootBoxHelper.GetAllLootBoxes(Context)[type];
 
                 var inventory = Context.GetInventory(Context.User);
 
-                if (inventory.Currency < variety.Cost) throw new DiscordCommandException($"Sorry, {Context.WhatDoICall(Context.User)}, you can't afford to buy one");
+                if (inventory.Currency < variety.Cost) throw new DiscordCommandException("Not enough currency", $"{Context.WhatDoICall(Context.User)}, you can't afford to buy one");
 
-                int actualCount = Math.Min(inventory.Currency / variety.Cost, count);
-                int cost = actualCount * variety.Cost;
+                int actualCount = (int) Math.Min(inventory.Currency / variety.Cost, count);
+                long cost = actualCount * variety.Cost;
 
                 string text;
 
@@ -57,7 +57,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             public async Task Open([Summary("How many boxes to open")] int count = 1, [Summary("The type of box to open")] string type = "normal")
             {
                 var availableVarieties = LootBoxHelper.GetAllLootBoxNames(Context.Guild.Id);
-                if (!availableVarieties.Contains(type)) throw new DiscordCommandException($"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "\"" : "one of these:\n")}{string.Join(", ", availableVarieties)}{(availableVarieties.Count == 1 ? "\"" : "")}");
+                if (!availableVarieties.Contains(type)) throw new DiscordCommandException("Bad lootbox type", $"{type} isn't a lootbox you can buy, try {(availableVarieties.Count == 1 ? "\"" : "one of these:\n")}{string.Join(", ", availableVarieties)}{(availableVarieties.Count == 1 ? "\"" : "")}");
 
                 if (count > 5)
                 {
@@ -77,11 +77,11 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                if (available == 0 && inventory.Currency < variety.Cost) throw new DiscordCommandException($"{Context.WhatDoICall(Context.User)}, you don't have any to open and can't afford to buy one");
+                if (available == 0 && inventory.Currency < variety.Cost) throw new DiscordCommandException("Not enough currency", $"{Context.User.Mention}, you don't have any to open and can't afford to buy one");
 
                 int needToBuy = count - available;
 
-                int canBuy = Math.Min(inventory.Currency / variety.Cost, needToBuy);
+                int canBuy = (int)Math.Min(inventory.Currency / variety.Cost, needToBuy);
 
                 if (canBuy == 0)
                 {
@@ -91,7 +91,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                int cost = canBuy * variety.Cost;
+                long cost = canBuy * variety.Cost;
 
                 int toOpen = available + canBuy;
 

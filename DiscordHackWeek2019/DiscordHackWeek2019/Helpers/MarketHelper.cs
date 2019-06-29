@@ -15,7 +15,7 @@ namespace DiscordHackWeek2019.Helpers
     {
         // Adds a listing to the market, transfering ownership of the emoji from the seller to the market
         // Returns the added listing
-        public static Listing AddListing(BotCommandContext context, ulong marketId, Emoji emoji, int price)
+        public static Listing AddListing(BotCommandContext context, ulong marketId, Emoji emoji, long price)
         {
             if (emoji.EmojiId == Guid.Empty) throw new ArgumentException("Error: cannot sell emoji without id");
 
@@ -45,7 +45,7 @@ namespace DiscordHackWeek2019.Helpers
         }
 
         // Gets the emoji price. Returns float.NaN if there are none for sale
-        public static (int, bool valid) GetEmojiPrice(BotCommandContext context, ulong marketId, string emojiUnicode)
+        public static (long, bool valid) GetEmojiPrice(BotCommandContext context, ulong marketId, string emojiUnicode)
         {
             // Make sure market exists
             var marketsDB = context.MarketCollection;
@@ -76,17 +76,17 @@ namespace DiscordHackWeek2019.Helpers
             var marketsDB = bot.DataProvider.GetCollection<Market>("markets");
             var market = GetOrCreate(marketsDB, marketId, true);
 
-            List <KeyValuePair<int, string>> prices = new List<KeyValuePair<int, string>>();
+            List <KeyValuePair<long, string>> prices = new List<KeyValuePair<long, string>>();
             foreach (string key in EmojiHelper.IterateAllEmoji)
             {
                 if (market.Listings.ContainsKey(key) && market.Listings[key].Count > 0)
                 {
                     var listing = CheapestListing(market.Listings[key]);
-                    prices.Add(new KeyValuePair<int, string>(listing.Price, key));
+                    prices.Add(new KeyValuePair<long, string>(listing.Price, key));
                 }
                 else
                 {
-                    prices.Add(new KeyValuePair<int, string>(0, key));
+                    prices.Add(new KeyValuePair<long, string>(0, key));
                 }
             }
 

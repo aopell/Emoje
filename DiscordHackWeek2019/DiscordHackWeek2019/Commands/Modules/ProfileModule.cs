@@ -16,16 +16,15 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("join"), Alias("optin", "optout"), Summary("Sell your soul. For a modest amount of currency.")]
         public async Task Join()
         {
-            if (Context.UserJoined(Context.User.Id)) throw new DiscordCommandException("You've already joined. There's no going back."); // TODO: real message
+            if (Context.UserJoined(Context.User.Id)) throw new DiscordCommandException("Already joined", "You've already joined. There's no going back."); // TODO: real message
 
             Context.UserCollection.Insert(new User
             {
                 UserId = Context.User.Id,
                 Currency = Context.Bot.Options.StartingCurrency,
-                CurrentInvestments = new PortfolioCollection(),
+                Investments = new PortfolioCollection(),
                 Inventory = new Dictionary<string, List<Guid>>(),
                 LootBoxes = new Dictionary<string, int>(),
-                PreviousInvestments = new PortfolioCollection(),
                 Transactions = new List<TransactionInfo>()
             });
 
@@ -44,8 +43,8 @@ namespace DiscordHackWeek2019.Commands.Modules
             embed.AddField("Unique Emoji", $"{Strings.emojiEmoji} " + profile.Inventory.Count, true);
             embed.AddField("Owned Loot Boxes", $"{Strings.boxEmoji} " + profile.LootBoxes.Sum(kv => kv.Value), true);
             embed.AddField("Transactions Completed", $"{Strings.transactionEmoji} " + profile.Transactions.Count, true);
-            embed.AddField("Unique Stocks", $"{Strings.stockEmoji} " + profile.CurrentInvestments.Stocks.Items.Values.Count(x => x.Count > 0), true);
-            embed.AddField("Unique Cryptocurrencies", $"{Strings.cryptoEmoji} " + profile.CurrentInvestments.Crypto.Items.Values.Count(x => x.Count > 0), true);
+            embed.AddField("Unique Stocks", $"{Strings.stockEmoji} " + profile.Investments.Stocks.Active.Values.Count(x => x.Count > 0), true);
+            embed.AddField("Unique Cryptocurrencies", $"{Strings.cryptoEmoji} " + profile.Investments.Crypto.Active.Values.Count(x => x.Count > 0), true);
 
             await ReplyAsync(embed: embed.Build());
         }
@@ -117,7 +116,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         [Command("details"), Summary("View all of one emoji you own"), JoinRequired]
         public async Task ViewInventory(string emoji)
         {
-            if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("That is not a valid emoji");
+            if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought, sold, or owned");
 
             // Get a list of emojis
             Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, Context.User.Id);

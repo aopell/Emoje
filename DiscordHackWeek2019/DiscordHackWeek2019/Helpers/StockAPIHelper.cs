@@ -62,7 +62,7 @@ namespace DiscordHackWeek2019.Helpers
                 if (s.StartsWith(type)) return SymbolType.Crypto;
             }
 
-            throw new DiscordCommandException($"\"{type}\" should either be \"stocks\" or \"crypto\"");
+            throw new DiscordCommandException("Bad argument", $"\"{type}\" should either be \"stocks\" or \"crypto\"");
         }
     }
 
