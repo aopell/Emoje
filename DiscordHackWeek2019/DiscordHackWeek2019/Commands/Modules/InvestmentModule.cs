@@ -242,7 +242,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command, Summary("View your current investment portfolio")]
-        public async Task View(string activeOrNot = "active", string type = "all")
+        public async Task View([Summary("Whether you want to view your current or old investments, should be something like \"active\", or \"old\"")] string activeOrNot = "active", [Summary("What kind of investment you want to see, either \"stocks\", \"crypto\", or \"all\"")] string type = "all")
         {
             var profile = Context.CallerProfile.Investments;
 

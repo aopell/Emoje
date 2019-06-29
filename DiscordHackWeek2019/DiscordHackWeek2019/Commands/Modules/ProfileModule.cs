@@ -32,7 +32,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("profile"), Summary("Displays the profile of yourself or another user")]
-        public async Task ViewProfile([Remainder] IUser user = null)
+        public async Task ViewProfile([Remainder, Summary("The user whose profile you want to see, defaults to you")] IUser user = null)
         {
             bool current = user == null;
             user = Context.GetUserOrSender(user);
@@ -52,7 +52,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("inventory"), Alias("i", "inv"), Summary("Displays the inventory of yourself or another user")]
-        public async Task ViewInventory([Remainder] IUser user = null)
+        public async Task ViewInventory([Remainder, Summary("The user whose inventory you want to see, defaults to you")] IUser user = null)
         {
             // Get a list of emojis
             bool current = user == null;
@@ -117,7 +117,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("details"), Summary("See more details about emoji you own"), JoinRequired]
-        public async Task ViewDetails(string emoji)
+        public async Task ViewDetails([Summary("The emoji you want details of")] string emoji)
         {
             if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought, sold, or owned");
 
@@ -154,7 +154,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("history"), Summary("See more details about an emoji"), JoinRequired]
-        public async Task ViewHistory(string id, IUser owner = null)
+        public async Task ViewHistory([Summary("The id of the emoji you want the history of. Try getting an emoji id with `+details`")] string id)
         {
             Guid guid;
             try
