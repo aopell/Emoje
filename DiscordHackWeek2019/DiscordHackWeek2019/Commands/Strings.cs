@@ -29,5 +29,17 @@ namespace DiscordHackWeek2019.Commands
         public const string epicRight = "<:image7:593993222276251648>";
         public const string legendaryLeft = "<:legendary_l:593691613969121280>";
         public const string legendaryRight = "<:legendary_r:593691673289162774>";
+
+        public const string welcomeMessage = "**Welcome to the Emojeconomy!**\n\n" +
+            "**Some useful commands to get you started:**\n" +
+            "`+profile` to see your basic balances\n" +
+            "`+lootbox open` to get your first emojis\n" +
+            "`+inventory` to see all your emojis\n" +
+            "`+market listings` to see some emoji that are for sale\n" +
+            "`+market buy[emoji]` to buy an emoji\n" +
+            "`+market sell[emoji] [price]` to sell an emoji\n" +
+            "`+invest in stock[STOCK]` to invest in a stock\n" +
+            "And of course `+help` for anything else!\n\n" +
+            "For more information on a command you can use `+help [command]`";
     }
 }

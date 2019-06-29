@@ -30,7 +30,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task ViewListings([Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest") => await ViewListings(Market.Global, emoji, sorting);
 
         [Command("listings"), Alias("view", "see", "check", "l", "v"), Summary("Views market listings in either the global or local markets")]
-        public async Task ViewListings([Summary("Which market to see listings in; either \"global\" or the \"local\" server market")] Market market, [Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest")
+        public async Task ViewListings([Summary("Which market to see listings in, either \"global\" or the \"local\" server market")] Market market, [Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest")
         {
             string[] HIGH_TO_LOW = { "highest", "highest first", "highest to lowest", "greatest to least", "expensive", "pricy", "g2l", "h2l" };
             string[] LOW_TO_HIGH = { "lowest", "lowest first", "lowest to highest", "least to greatest", "cheap", "affordable", "l2g", "l2h" };
@@ -90,10 +90,10 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from the global market")]
-        public async Task BuyEmoji(string emoji) => await BuyEmoji(Market.Global, emoji);
+        public async Task BuyEmoji([Summary("Which emoji you want to buy")] string emoji) => await BuyEmoji(Market.Global, emoji);
 
         [Command("buy"), Alias("purchase", "order", "b"), Summary("Purchase an emoji from either the global or local markets")]
-        public async Task BuyEmoji(Market market, string emoji)
+        public async Task BuyEmoji([Summary("Which market to buy emoji in, either \"global\" or the \"local\" server market")] Market market, [Summary("Which emoji you want to buy")] string emoji)
         {
             if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought or sold");
 
@@ -109,10 +109,10 @@ namespace DiscordHackWeek2019.Commands.Modules
         }
 
         [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale on the global market")]
-        public async Task SellEmoji(string emoji, long price) => await SellEmoji(Market.Global, emoji, price);
+        public async Task SellEmoji([Summary("Which emoji you want to sell")] string emoji, [Summary("How much you want to sell the emoji for")] long price) => await SellEmoji(Market.Global, emoji, price);
 
         [Command("sell"), Alias("offer", "s"), Summary("Put one of your emoji up for sale in either the global or local markets")]
-        public async Task SellEmoji(Market market, string emoji, long price)
+        public async Task SellEmoji([Summary("Which market to sell emoji in, either \"global\" or the \"local\" server market")] Market market, [Summary("Which emoji you want to sell")] string emoji, [Summary("How much you want to sell the emoji for")] long price)
         {
             if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought or sold");
 

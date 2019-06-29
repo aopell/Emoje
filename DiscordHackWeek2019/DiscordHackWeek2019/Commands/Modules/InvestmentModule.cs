@@ -76,7 +76,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             async Task onReject(ReactionMessage m)
             {
-                await m.Message.ModifyAsync(properties => properties.Content = "Purchase canceled");
+                await m.Message.ModifyAsync(properties => properties.Content = $"Purchase of {(symbolType == SymbolType.Crypto ? "" : $"{ (toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} canceled");
             }
         }
 
@@ -237,12 +237,12 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             async Task onReject(ReactionMessage m)
             {
-                await m.Message.ModifyAsync(p => p.Content = "Sale canceled");
+                await m.Message.ModifyAsync(p => p.Content = $"Sale of {(symbolType == SymbolType.Crypto ? "" : $"{ (toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} canceled");
             }
         }
 
         [Command, Summary("View your current investment portfolio")]
-        public async Task View(string activeOrNot = "active", string type = "all")
+        public async Task View([Summary("Whether you want to view your current or old investments, should be something like \"active\", or \"old\"")] string activeOrNot = "active", [Summary("What kind of investment you want to see, either \"stocks\", \"crypto\", or \"all\"")] string type = "all")
         {
             var profile = Context.CallerProfile.Investments;
 
@@ -266,7 +266,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (investments.Count() == 0) throw new DiscordCommandException("Nothing to show", $"{Context.User.Mention}, you have no {(active ? "current" : "old")} investments {("all".StartsWith(type) ? "at all" : "of that type")}");
 
-            string title = $"{("all".StartsWith(type) ? "All investments" : "Investmests in ")}";
+            string title = $"{(active ? "Current investments" : "Investment history")}";
 
             const int NUM_PER_PAGE = 10;
 
@@ -279,7 +279,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 List<string> contents = new List<string>();
                 foreach (var (t, name, investment) in investments.Skip((page - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE))
                 {
-                    stringBuilder.Append($"{(t == SymbolType.Crypto ? Strings.cryptoEmoji : Strings.stockEmoji)} {investment.Amount} {(t == SymbolType.Crypto ? "" : $"{(investment.Amount == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.PurchasePrice))}");
+                    stringBuilder.Append($"{(t == SymbolType.Crypto ? Strings.cryptoEmoji : Strings.stockEmoji)} {(t == SymbolType.Crypto ? $"{(investment.Amount == 1 ? "one " : $"{investment.Amount} ")}" : $"{(investment.Amount == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.PurchasePrice))}");
                     if (investment.SellPrice != null) stringBuilder.Append($", sold for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.SellPrice ?? 0))}");
                     stringBuilder.AppendLine();
                 }
