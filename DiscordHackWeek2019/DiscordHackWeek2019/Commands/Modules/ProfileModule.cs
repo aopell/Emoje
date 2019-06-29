@@ -28,6 +28,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 Transactions = new List<TransactionInfo>()
             });
 
+            await Context.User.GetOrCreateDMChannelAsync().ContinueWith(async task => await task.Result.SendMessageAsync(Strings.welcomeMessage));
             await ReplyAsync($"Welcome {Context.User.Mention}! You will find that {Context.Money(Context.Bot.Options.StartingCurrency)} has been deposited into your account.");
         }
 
