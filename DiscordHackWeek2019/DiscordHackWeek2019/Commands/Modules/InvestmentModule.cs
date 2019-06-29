@@ -25,13 +25,14 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (profile.Currency < info.LatestPrice) throw new DiscordCommandException("Not enough currency", $"{Context.User.Mention}, you need {Context.Money((long) info.LatestPrice - profile.Currency)} more to buy a single {(symbolType == SymbolType.Crypto ? name.ToUpper() : "share")}");
 
-            long canBuy = (long)Math.Ceiling(profile.Currency / info.LatestPrice);
+            long price = ((long)Math.Ceiling(info.LatestPrice));
+            long canBuy = profile.Currency / price;
             long toBuy = Math.Min(canBuy, amount);
 
             string message;
 
-            if (canBuy >= amount) message = $"{Context.User.Mention}, do you want to purchase {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money((long)(info.LatestPrice * toBuy))}? You currently have {Context.Money(profile.Currency)}.";
-            else message = $"{Context.User.Mention}, you currently have {Context.Money(profile.Currency)}, that's only enough to buy {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()}. Do you still want to buy {(toBuy == 1 ? "it" : "them")} for {Context.Money((long)(info.LatestPrice * toBuy))}?";
+            if (canBuy >= amount) message = $"{Context.User.Mention}, do you want to purchase {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(price * toBuy)}? You currently have {Context.Money(profile.Currency)}.";
+            else message = $"{Context.User.Mention}, you currently have {Context.Money(profile.Currency)}, that's only enough to buy {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()}. Do you still want to buy {(toBuy == 1 ? "it" : "them")} for {Context.Money(price * toBuy)}?";
 
             ReactionMessageHelper.CreateConfirmReactionMessage(Context, await ReplyAsync(message), onPurchase, onReject);
 
@@ -39,7 +40,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 Context.ClearCachedValues();
                 profile = Context.CallerProfile;
-                if (profile.Currency < info.LatestPrice * toBuy)
+                if (profile.Currency < price * toBuy)
                 {
                     await m.Message.ModifyAsync(mod =>
                     {
@@ -53,7 +54,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     return;
                 }
 
-                profile.Currency -= (int)(info.LatestPrice * toBuy);
+                profile.Currency -= price * toBuy;
                 var investments = symbolType == SymbolType.Stock ? profile.Investments.Stocks.Active : profile.Investments.Crypto.Active;
 
                 if (!investments.ContainsKey(name))
@@ -70,7 +71,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
                 Context.UserCollection.Update(profile);
 
-                await m.Message.ModifyAsync(properties => properties.Content = $"{Context.WhatDoICall(Context.User)} bought {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money((int)(info.LatestPrice * toBuy))}");
+                await m.Message.ModifyAsync(properties => properties.Content = $"{Context.WhatDoICall(Context.User)} bought {toBuy} {(symbolType == SymbolType.Crypto ? "" : $"{(toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(price * toBuy)}");
             }
 
             async Task onReject(ReactionMessage m)
@@ -97,12 +98,13 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             long toSell = Math.Min(investmentsInName.Sum(x => x.Amount), amount);
 
-            long totalSellAmount = toSell * (long) info.LatestPrice;
+            long price = (long)Math.Ceiling(info.LatestPrice);
+            long totalSellAmount = toSell * price;
 
             string message;
 
-            if (toSell >= amount) message = $"{Context.User.Mention}, do you want to sell {toSell} {(symbolType == SymbolType.Crypto ? "" : $"{(toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money((long)(info.LatestPrice * toSell))}?";
-            else message = $"{Context.User.Mention}, you currently have {toSell} {(symbolType == SymbolType.Crypto ? "" : $"{(toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()}. Do you still want to sell {(toSell == 1 ? "it" : "them")} for {Context.Money((long)(info.LatestPrice * toSell))}?";
+            if (toSell >= amount) message = $"{Context.User.Mention}, do you want to sell {toSell} {(symbolType == SymbolType.Crypto ? "" : $"{(toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(price * toSell)}?";
+            else message = $"{Context.User.Mention}, you currently have {toSell} {(symbolType == SymbolType.Crypto ? "" : $"{(toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()}. Do you still want to sell {(toSell == 1 ? "it" : "them")} for {Context.Money(price * toSell)}?";
 
             ReactionMessageHelper.CreateConfirmReactionMessage(Context, await ReplyAsync(message), onSell, onReject);
 
@@ -147,17 +149,17 @@ namespace DiscordHackWeek2019.Commands.Modules
                 long totalPurchaseAmount = 0;
 
                 long stillToSell = toSell;
-                foreach (var inv in investmentsInName.OrderByDescending(x => Math.Abs(info.LatestPrice - x.PurchasePrice)))
+                foreach (var inv in investmentsInName.OrderByDescending(x => Math.Abs(price - x.PurchasePrice)))
                 {
                     if (stillToSell >= inv.Amount)
                     {
-                        totalPurchaseAmount += (long)Math.Ceiling(inv.Amount * info.LatestPrice);
+                        totalPurchaseAmount += inv.Amount * (long)Math.Ceiling(inv.PurchasePrice);
                         stillToSell -= inv.Amount;
                         sold.Add(inv);
                     }
                     else
                     {
-                        totalPurchaseAmount += (long)Math.Ceiling(stillToSell * info.LatestPrice);
+                        totalPurchaseAmount += stillToSell * (long)Math.Ceiling(inv.PurchasePrice);
 
                         remainderToStore = new Investment
                         {
@@ -239,23 +241,58 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
         }
 
-        [Command, Summary("View your current investment portfolios")]
-        public async Task View()
+        [Command, Summary("View your current investment portfolio")]
+        public async Task View(string activeOrNot = "active", string type = "all")
         {
-            StringBuilder b = new StringBuilder();
-            b.AppendLine("**Stocks**");
-            foreach (var kvp in Context.CallerProfile.Investments.Stocks.Active)
+            var profile = Context.CallerProfile.Investments;
+
+            bool active = "active".StartsWith(activeOrNot);
+            var crypto = (active ? profile.Crypto.Active : profile.Crypto.Old).Select(s => (SymbolType.Crypto, s));
+            var stocks = (active ? profile.Stocks.Active : profile.Stocks.Old).Select(s => (SymbolType.Stock, s));
+
+            IEnumerable<(SymbolType t, KeyValuePair<string, List<Investment>> kv)> pre;
+            if ("all".StartsWith(type))
             {
-                if (kvp.Value.Count == 0) continue;
-                b.AppendLine($"{kvp.Value.Count}x{kvp.Key.ToUpper()}");
+                pre = crypto.Concat(stocks);
             }
-            b.AppendLine("**Crypto**");
-            foreach (var kvp in Context.CallerProfile.Investments.Crypto.Active)
+            else
             {
-                if (kvp.Value.Count == 0) continue;
-                b.AppendLine($"{kvp.Value.Count}x{kvp.Key.ToUpper()}");
+                SymbolType st = StockAPIHelper.GetSymbolTypeFromString(type);
+
+                pre = st == SymbolType.Crypto ? crypto : stocks;
             }
-            await ReplyAsync(b.ToString());
+
+            IEnumerable<(SymbolType t, string s, Investment i)> investments = pre.SelectMany(p => p.kv.Value.Select(i => (p.t, p.kv.Key, i)));
+
+            if (investments.Count() == 0) throw new DiscordCommandException("Nothing to show", $"{Context.User.Mention}, you have no {(active ? "current" : "old")} investments {("all".StartsWith(type) ? "at all" : "of that type")}");
+
+            string title = $"{("all".StartsWith(type) ? "All investments" : "Investmests in ")}";
+
+            const int NUM_PER_PAGE = 10;
+
+            int totalPages = (investments.Count() + NUM_PER_PAGE - 1) / NUM_PER_PAGE;
+
+            Embed getPage(int page)
+            {
+                EmbedBuilder builder = Context.EmbedFromUser(Context.User);
+                StringBuilder stringBuilder = new StringBuilder();
+                List<string> contents = new List<string>();
+                foreach (var (t, name, investment) in investments.Skip((page - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE))
+                {
+                    stringBuilder.Append($"{(t == SymbolType.Crypto ? Strings.cryptoEmoji : Strings.stockEmoji)} {investment.Amount} {(t == SymbolType.Crypto ? "" : $"{(investment.Amount == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.PurchasePrice))}");
+                    if (investment.SellPrice != null) stringBuilder.Append($", sold for {Context.Money(investment.Amount * (long)Math.Ceiling(investment.SellPrice ?? 0))}");
+                    stringBuilder.AppendLine();
+                }
+
+                builder.AddField(new EmbedFieldBuilder().WithName(title).WithValue(stringBuilder.ToString()));
+                builder.WithFooter(new EmbedFooterBuilder().WithText($"Page {page} of {totalPages}"));
+
+                return builder.Build();
+            }
+
+            var message = await ReplyAsync(embed: getPage(1));
+
+            ReactionMessageHelper.CreatePaginatedMessage(Context, message, totalPages, 1, pg => Task.FromResult(("", getPage(pg.CurrentPage))));
         }
     }
 }
