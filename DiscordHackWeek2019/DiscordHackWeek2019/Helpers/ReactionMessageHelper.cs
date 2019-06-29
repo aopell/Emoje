@@ -103,7 +103,7 @@ namespace DiscordHackWeek2019.Helpers
         public IUserMessage Message { get; }
         public bool AllowMultipleReactions { get; }
         public bool AcceptsAllReactions { get; }
-        public IEnumerable<string> AcceptedReactions => Actions.Keys;
+        public virtual IEnumerable<string> AcceptedReactions => Actions.Keys;
         protected CustomReactionAction DefaultAction { get; }
         protected Dictionary<string, ReactionAction> Actions { get; }
 
@@ -149,6 +149,7 @@ namespace DiscordHackWeek2019.Helpers
         public int PageCount { get; }
         public int CurrentPage { get; private set; }
         public PageAction OnChage { get; }
+        public override IEnumerable<string> AcceptedReactions => new[] { FirstPage, LastPage, PreviousPage, NextPage };
 
         public PaginatedMessage(BotCommandContext context, IUserMessage message, int count, int initial, PageAction action) : base(context, message, new Dictionary<string, ReactionAction>(), true)
         {

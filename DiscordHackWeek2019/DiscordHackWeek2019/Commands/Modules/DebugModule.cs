@@ -87,7 +87,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             });
         }
 
-        [Command("set")]
+        [Command("currency"), Alias("money")]
         public async Task SetCurrency(Discord.IUser user, int amount)
         {
             var thing = Context.UserCollection.GetById(user.Id);
@@ -96,18 +96,32 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync("Ok!");
         }
 
-        [Command("give")]
-        public async Task GiveEmoji(Discord.IUser user, string emoji)
+        [Command("give"), Alias("emoji", "emote")]
+        public async Task GiveEmoji(Discord.IUser user, string emoji, int amount = 1)
         {
             var thing = Context.GetInventory(user);
+            amount = amount <= 25 ? amount : 25;
 
-            thing.Add(new Models.Emoji
+            for (int i = 0; i < amount; i++)
             {
-                Unicode = emoji,
-                Transactions = new List<Models.TransactionInfo>(),
-            }, true);
+                thing.Add(new Models.Emoji
+                {
+                    Unicode = emoji,
+                    Transactions = new List<Models.TransactionInfo>(),
+                }, true);
+            }
 
             thing.Save();
+            await ReplyAsync("Ok!");
+        }
+
+        [Command("lootbox"), Alias("loot", "lootboxes", "box")]
+        public async Task SetLootboxes(Discord.IUser user, int amount)
+        {
+            var inventory = new InventoryWrapper(Context, user.Id);
+            inventory.AddLoot("normal", amount);
+            inventory.Save();
+
             await ReplyAsync("Ok!");
         }
     }

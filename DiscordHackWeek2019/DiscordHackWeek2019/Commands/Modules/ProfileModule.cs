@@ -110,7 +110,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             var message = await ReplyAsync(embed: embeds[0].Build());
             Helpers.ReactionMessageHelper.CreatePaginatedMessage(Context, message, embeds.Count, 1, m =>
             {
-                return Task.FromResult(($"", embeds[m.CurrentPage -1].Build()));
+                return Task.FromResult(($"", embeds[m.CurrentPage - 1].Build()));
             });
         }
 
