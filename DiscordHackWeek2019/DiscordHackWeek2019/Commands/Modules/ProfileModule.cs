@@ -130,9 +130,10 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
 
             List<string> contents = new List<string>();
-            foreach (var e in emojis)
+            var emojisSort = emojis.OrderByDescending(e => e.Transactions.Count);
+            foreach (var e in emojisSort)
             {
-                contents.Add($"{e.Unicode}: {e.EmojiId}");
+                contents.Add($"{e.Unicode}: {e.EmojiId} ({e.Transactions.Count})");
             }
 
             var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emoji: ID", 15);

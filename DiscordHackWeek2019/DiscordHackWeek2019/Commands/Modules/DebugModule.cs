@@ -127,5 +127,25 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             await ReplyAsync("Ok!");
         }
+
+        [Command("disable"), Alias("dis")]
+        public async Task DisableUser(Discord.IUser user)
+        {
+            var profile = Context.GetProfile(user);
+            profile.Disabled = true;
+            Context.UserCollection.Update(profile);
+
+            await ReplyAsync("Ok!");
+        }
+
+        [Command("enable"), Alias("en")]
+        public async Task EnbleUser(Discord.IUser user)
+        {
+            var profile = Context.GetProfile(user);
+            profile.Disabled = false;
+            Context.UserCollection.Update(profile);
+
+            await ReplyAsync("Ok!");
+        }
     }
 }
