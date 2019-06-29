@@ -140,7 +140,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             {
                 StringBuilder text = new StringBuilder();
                 IUserMessage message = null;
-                if(count > 1)
+                if (count > 1)
                 {
                     string m = string.Concat(Enumerable.Repeat(variety.Emote.ToString() + "\n", count));
                     message = await ReplyAsync(m);
@@ -150,13 +150,12 @@ namespace DiscordHackWeek2019.Commands.Modules
                 for (int i = 0; i < count; i++)
                 {
                     var box = variety.Open(Context.Bot, 0);
-                    if(count == 1)
+                    if (count == 1)
                     {
                         message = await ReplyAsync(variety.Emote.ToString());
                         await Task.Delay(1000);
                         StringBuilder animation = new StringBuilder();
-                        int i = 0; 
-                        foreach(var (rarity, emoji) in box)
+                        foreach (var (rarity, emoji) in box)
                         {
                             animation.Append($"{rarity.LeftBracket}❔{rarity.RightBracket}");
                         }
