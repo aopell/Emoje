@@ -88,13 +88,16 @@ namespace DiscordHackWeek2019.Commands
                         var c = commands.Search(context, argPos).Commands.FirstOrDefault().Command;
                         string name = c.Name;
                         var module = c.Module;
-                        while(module != null)
+                        while (module != null)
                         {
-                            name = module.Name + " " + name;
+                            if (!string.IsNullOrEmpty(module.Group))
+                            {
+                                name = module.Group + " " + name;
+                            }
                             module = module.Parent;
                         }
                         embed.WithTitle("Incorrect Command Usage");
-                        embed.WithDescription($"Error parsing command. Run `help {name}` for more information.");
+                        embed.WithDescription($"Error parsing command. Run `+help {name}` for more information.");
                         break;
                     case CommandError.UnmetPrecondition:
                         embed.WithTitle("Error Executing Command");

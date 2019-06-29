@@ -23,6 +23,7 @@ namespace DiscordHackWeek2019.Helpers
 
         public static async Task<SymbolInfo> GetSymbolInfo(string symbol, SymbolType type = SymbolType.Stock)
         {
+            string origSymbol = symbol;
             if (type == SymbolType.Crypto)
             {
                 symbol += "USDT";
@@ -38,6 +39,10 @@ namespace DiscordHackWeek2019.Helpers
 
             if (!result.IsSuccessStatusCode)
             {
+                if (result.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    throw new DiscordCommandException("Symbol does not exist", $"The symbol `{origSymbol}` does not correspond to an existing security");
+                }
                 throw new InvalidOperationException($"{result.StatusCode} {result.StatusCode.ToString()}: {result.ReasonPhrase}");
             }
 
@@ -76,6 +81,6 @@ namespace DiscordHackWeek2019.Helpers
     public enum SymbolType
     {
         Stock,
-        Crypto,        
+        Crypto,
     }
 }
