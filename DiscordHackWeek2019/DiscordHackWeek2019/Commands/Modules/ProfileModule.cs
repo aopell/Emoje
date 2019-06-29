@@ -31,10 +31,12 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync($"Welcome {Context.User.Mention}! {Context.Money(Context.Bot.Options.StartingCurrency)} has been deposited to your account.");
         }
 
-        [Command("profile"), Summary("Displays the profile of yourself or another user"), JoinRequired]
+        [Command("profile"), Summary("Displays the profile of yourself or another user")]
         public async Task ViewProfile([Remainder] IUser user = null)
         {
+            bool current = user == null;
             user = Context.GetUserOrSender(user);
+            if (!Context.UserJoined(user.Id)) throw new DiscordCommandException(current ? "You haven't joined" : "User not found", current ? Strings.UserJoinNeeded(user) : "That user has not joined the Emojeconomy");
             var profile = Context.GetProfile(user);
 
             var embed = Context.EmbedFromUser(user);
@@ -49,11 +51,13 @@ namespace DiscordHackWeek2019.Commands.Modules
             await ReplyAsync(embed: embed.Build());
         }
 
-        [Command("inventory"), Alias("i", "inv"), Summary("Displays the inventory of yourself or another user"), JoinRequired]
+        [Command("inventory"), Alias("i", "inv"), Summary("Displays the inventory of yourself or another user")]
         public async Task ViewInventory([Remainder] IUser user = null)
         {
             // Get a list of emojis
+            bool current = user == null;
             user = Context.GetUserOrSender(user);
+            if (!Context.UserJoined(user.Id)) throw new DiscordCommandException(current ? "You haven't joined" : "User not found", current ? Strings.UserJoinNeeded(user) : "That user has not joined the Emojeconomy");
             Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, user.Id);
             var emojis = inventory.Enumerate();
 
@@ -171,7 +175,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             List<TransactionInfo> transactions = emoji.Transactions;
             List<string> contents = new List<string>();
 
-            foreach(var t in transactions)
+            foreach (var t in transactions)
             {
                 var market = Context.Bot.DataProvider.GetCollection<Models.Market>("markets").GetById(t.MarketId);
                 //var tInfo = market.Transactions.OrderBy(e => e.TransactionId).FirstOrDefault();
@@ -181,7 +185,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                     continue;
                 }
 
-                if(tInfo.Data.GetType() == typeof(FromLootbox))
+                if (tInfo.Data.GetType() == typeof(FromLootbox))
                 {
                     var data = (FromLootbox)tInfo.Data;
                     var buyer = DiscordBot.MainInstance.Client.GetUser(data.Acquisitor);
