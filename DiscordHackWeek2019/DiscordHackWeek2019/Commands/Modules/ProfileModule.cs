@@ -78,7 +78,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (emojisCount.Keys.Count == 0)
             {
-                throw new DiscordCommandException("You don't have any emojis. Go get some!!!");
+                throw new DiscordCommandException("Empty inventory", "You don't have any emojis. Go get some!!!");
             }
 
             int inLineCount = 1;
@@ -118,7 +118,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             if (!Helpers.EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException("Bad emoji", $"{emoji} cannot be bought, sold, or owned");
 
             // Get a list of emojis
-            Helpers.InventoryWrapper inventory = new Helpers.InventoryWrapper(Context, Context.User.Id);
+            Helpers.InventoryWrapper inventory = Context.GetInventory(Context.User.Id);
             IEnumerable<Models.Emoji> emojis;
             try
             {
@@ -126,7 +126,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
             catch
             {
-                throw new DiscordCommandException($"You do not have anything that matches {emoji}");
+                throw new DiscordCommandException("Bad emoji", $"You do not have anything that matches {emoji}");
             }
 
             List<string> contents = new List<string>();
@@ -138,7 +138,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, "Emoji: ID", 15);
             if (embeds.Count == 0)
             {
-                throw new DiscordCommandException($"You do not have anything that matches {emoji}");
+                throw new DiscordCommandException("Bad emoji", $"You do not have anything that matches {emoji}");
             }
 
             var message = await ReplyAsync(embed: embeds[0].Build());
@@ -158,14 +158,14 @@ namespace DiscordHackWeek2019.Commands.Modules
             }
             catch
             {
-                throw new DiscordCommandException($"Could not parse that id. Try getting an emoji id with `+details`.");
+                throw new DiscordCommandException("Bad id", $"Could not parse that id. Try getting an emoji id with `+details`.");
             }
 
             Models.Emoji emoji = Context.Bot.DataProvider.GetCollection<Models.Emoji>("emoji").FindById(guid);
 
             if (emoji == null)
             {
-                throw new DiscordCommandException($"Could not find an emoji with that id.");
+                throw new DiscordCommandException("False id", $"Could not find an emoji with that id.");
             }
 
             List<TransactionInfo> transactions = emoji.Transactions;
@@ -198,7 +198,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             var embeds = Helpers.EmbedHelper.MakeEmbeds(Context, contents, $"{emoji.Unicode} - {guid.ToString()}", 15);
             if (embeds.Count == 0)
             {
-                throw new DiscordCommandException($"This {emoji.Unicode} has no history");
+                throw new DiscordCommandException("Nothing to show", $"This {emoji.Unicode} has no history");
             }
 
             var message = await ReplyAsync(embed: embeds[0].Build());
