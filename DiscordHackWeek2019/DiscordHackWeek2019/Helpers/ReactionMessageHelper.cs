@@ -19,6 +19,7 @@ namespace DiscordHackWeek2019.Helpers
 
         public static void CreatePaginatedMessage(BotCommandContext context, IUserMessage message, int pageCount, int initialPage, PageAction action, int timeout = 300000, Action onTimeout = null)
         {
+            if (pageCount == 1) return;
             message.AddReactionsAsync(new[] { new Emoji(PaginatedMessage.FirstPage), new Emoji(PaginatedMessage.PreviousPage), new Emoji(PaginatedMessage.NextPage), new Emoji(PaginatedMessage.LastPage) });
 
             var paginatedMessage = new PaginatedMessage(context, message, pageCount, initialPage, action);
