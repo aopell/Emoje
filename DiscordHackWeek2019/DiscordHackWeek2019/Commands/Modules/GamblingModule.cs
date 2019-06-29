@@ -40,7 +40,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                     async onOkay =>
                     {
-                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}");
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)} bought {(actualCount == 1 ? "one" : actualCount.ToString())} box{(actualCount == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
                         inventory.AddLoot(type, actualCount);
 
@@ -136,7 +136,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                             return;
                         }
 
-                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");
+                        var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)} bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
                         if (available > 0) inventory.RemoveBoxes(type, available);
 
