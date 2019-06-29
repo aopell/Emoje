@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using DiscordHackWeek2019.Commands;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
@@ -16,6 +17,9 @@ namespace DiscordHackWeek2019.Helpers
 
         private static ObjectCache StockCache = new MemoryCache("stocks");
         private static readonly CacheItemPolicy Policy = new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(5) };
+
+        private static string[] STOCKS = { "stocks" };
+        private static string[] CRYPTO = { "crypto" };
 
         public static async Task<SymbolInfo> GetSymbolInfo(string symbol, SymbolType type = SymbolType.Stock)
         {
@@ -45,6 +49,21 @@ namespace DiscordHackWeek2019.Helpers
 
             return info;
         }
+
+        public static SymbolType GetSymbolTypeFromString(string type)
+        {
+            foreach (var s in STOCKS)
+            {
+                if (s.StartsWith(type)) return SymbolType.Stock;
+            }
+
+            foreach (var s in CRYPTO)
+            {
+                if (s.StartsWith(type)) return SymbolType.Crypto;
+            }
+
+            throw new DiscordCommandException($"\"{type}\" should either be \"stocks\" or \"crypto\"");
+        }
     }
 
     public class SymbolInfo
@@ -57,6 +76,6 @@ namespace DiscordHackWeek2019.Helpers
     public enum SymbolType
     {
         Stock,
-        Crypto
+        Crypto,        
     }
 }

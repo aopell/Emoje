@@ -104,6 +104,38 @@ namespace DiscordHackWeek2019.Commands.Modules
                 ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                     async onOkay =>
                     {
+                        Context.ClearCachedValues();
+
+                        inventory = Context.GetInventory(Context.User);
+
+                        if (inventory.GetNumLootBoxes(type) < available)
+                        {
+                            await message.ModifyAsync(mod =>
+                            {
+                                mod.Content = "";
+                                EmbedBuilder builder = new EmbedBuilder();
+                                builder.WithColor(Color.Red);
+                                builder.WithTitle(Strings.SomethingChanged);
+                                builder.WithDescription($"{Context.WhatDoICall(Context.User)}, you can no longer have the {(available == 1 ? "one" : available.ToString())} box{(available == 1 ? "" : "es")} to open");
+                                mod.Embed = builder.Build();
+                            });
+                            return;
+                        }
+
+                        if (inventory.Currency < cost)
+                        {
+                            await message.ModifyAsync(mod =>
+                            {
+                                mod.Content = "";
+                                EmbedBuilder builder = new EmbedBuilder();
+                                builder.WithColor(Color.Red);
+                                builder.WithTitle(Strings.SomethingChanged);
+                                builder.WithDescription($"{Context.WhatDoICall(Context.User)}, you can no longer afford to buy the {(canBuy == 1 ? "one" : canBuy.ToString())}");
+                                mod.Embed = builder.Build();
+                            });
+                            return;
+                        }
+
                         var modify = message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)}, bought {(canBuy == 1 ? "one" : canBuy.ToString())} box{(canBuy == 1 ? "" : "es")} for {Context.Money(cost)}");
                         inventory.Currency -= cost;
                         if (available > 0) inventory.RemoveBoxes(type, available);
@@ -155,8 +187,8 @@ namespace DiscordHackWeek2019.Commands.Modules
                         message = await ReplyAsync(variety.Emote.ToString());
                         await Task.Delay(1000);
                         StringBuilder animation = new StringBuilder();
-                        int i = 0; 
-                        foreach(var (rarity, emoji) in box)
+
+                        foreach (var (rarity, emoji) in box)
                         {
                             animation.Append($"{rarity.LeftBracket}❔{rarity.RightBracket}");
                         }

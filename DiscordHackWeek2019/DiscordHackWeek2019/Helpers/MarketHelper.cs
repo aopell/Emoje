@@ -293,9 +293,25 @@ namespace DiscordHackWeek2019.Helpers
             ReactionMessageHelper.CreateConfirmReactionMessage(ctx, message, 
                 async onOkay =>
                 {
-                    var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {ctx.Money(listing.Price)}");
-
+                    ctx.ClearCachedValues();
                     var buyerProfile = ctx.UserCollection.GetById(purchase.BuyerId);
+
+                    if (buyerProfile.Currency < listing.Price)
+                    {
+                        Queue(PostListing.InMarket(purchase.Emoji, purchase.MarketId, listing));
+                        await message.ModifyAsync(mod =>
+                        {
+                            mod.Content = "";
+                            Discord.EmbedBuilder builder = new Discord.EmbedBuilder();
+                            builder.WithColor(Discord.Color.Red);
+                            builder.WithTitle(Strings.SomethingChanged);
+                            builder.WithDescription($"{ctx.User.Mention}, you no longer have enough money to buy {purchase.Emoji}");
+                            mod.Embed = builder.Build();
+                        });
+                        return;
+                    }
+
+                    var replyHandle = message.ModifyAsync(properties => properties.Content = $"{ctx.WhatDoICall(buyer.Id)} bought {purchase.Emoji} for {ctx.Money(listing.Price)}");
 
                     if (listing.SellerId == buyer.Id)
                     {

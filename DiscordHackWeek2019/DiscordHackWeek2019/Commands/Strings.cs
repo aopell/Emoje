@@ -10,6 +10,8 @@ namespace DiscordHackWeek2019.Commands
         public static string UserJoinNeeded(Discord.IUser u) { return $"{u.Mention}, try joining with `+join` first!"; }
         public const string UserDisabled = "Sorry, but you do not have permission to use the bot";
 
+        public const string SomethingChanged = "Something's different";
+
         // Emoji
         public const string moneyEmoji = "<:money:593606876051013678>";
         public const string emojiEmoji = "😃";

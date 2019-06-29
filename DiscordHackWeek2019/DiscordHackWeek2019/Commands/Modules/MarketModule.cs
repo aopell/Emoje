@@ -30,27 +30,27 @@ namespace DiscordHackWeek2019.Commands.Modules
         public async Task ViewListings([Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest") => await ViewListings(Market.Global, emoji, sorting);
 
         [Command("listings"), Alias("view", "see", "check", "l", "v"), Summary("Views market listings in either the global or local markets")]
-        public async Task ViewListings([Summary("Which market to see listings in; either \"global\" or the \"local\" server market")] Market m, [Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest")
+        public async Task ViewListings([Summary("Which market to see listings in; either \"global\" or the \"local\" server market")] Market market, [Summary("Which emoji to see listings of, or \"all\"")] string emoji = "all", [Summary("How to sort the listings. Try \"pricy\" or \"cheap\""), Remainder] string sorting = "lowest")
         {
             string[] HIGH_TO_LOW = { "highest", "highest first", "highest to lowest", "greatest to least", "expensive", "pricy", "g2l", "h2l" };
             string[] LOW_TO_HIGH = { "lowest", "lowest first", "lowest to highest", "least to greatest", "cheap", "affordable", "l2g", "l2h" };
 
-            var market = MarketHelper.GetOrCreate(Context.MarketCollection, MarketId(m));
+            var m = MarketHelper.GetOrCreate(Context.MarketCollection, MarketId(market));
 
             IEnumerable<(string e, Listing l)> listings;
             if (emoji == "all")
             {
-                listings = market.Listings.SelectMany(kv => kv.Value.Select(l => (kv.Key, l)));
+                listings = m.Listings.SelectMany(kv => kv.Value.Select(l => (kv.Key, l)));
                 
-                if (listings.Count() == 0) throw new DiscordCommandException($"There are no listings in {Context.GetMarketName(MarketId(m))}");
+                if (listings.Count() == 0) throw new DiscordCommandException($"There are no listings in {Context.GetMarketName(MarketId(market))}");
             }
             else
             {
                 if (!EmojiHelper.IsValidEmoji(emoji)) throw new DiscordCommandException($"{emoji} cannot be bought or sold");
 
-                if (!market.Listings.ContainsKey(emoji)) throw new DiscordCommandException($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(m))}");
+                if (!m.Listings.ContainsKey(emoji)) throw new DiscordCommandException($"There are no listings for {emoji} in {Context.GetMarketName(MarketId(market))}");
 
-                listings = market.Listings[emoji].Select(l => (emoji, l));
+                listings = m.Listings[emoji].Select(l => (emoji, l));
             }
 
             if (HIGH_TO_LOW.Contains(sorting.Trim()))
@@ -62,7 +62,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 listings = listings.OrderBy(p => p.l.Price);
             }
 
-            string title = $"{(emoji == "all" ? "All listings" : emoji)} in {Context.GetMarketName(MarketId(m))}";
+            string title = $"{(emoji == "all" ? "All listings" : emoji)} in {Context.GetMarketName(MarketId(market))}";
 
             const int NUM_PER_PAGE = 10;
 
@@ -75,7 +75,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 List<string> contents = new List<string>();
                 foreach (var (e, listing) in listings.Skip((page - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE))
                 {
-                    stringBuilder.Append($"{e} for {Context.Money(listing.Price)} by {(m == Market.G ? Context.Bot.Client.GetUser(listing.SellerId).ToString() : Context.WhatDoICall(listing.SellerId))}\n");
+                    stringBuilder.Append($"{e} for {Context.Money(listing.Price)} by {(market == Market.G ? Context.Bot.Client.GetUser(listing.SellerId).ToString() : Context.WhatDoICall(listing.SellerId))}\n");
                 }
 
                 builder.AddField(new EmbedFieldBuilder().WithName(title).WithValue(stringBuilder.ToString()));
@@ -126,13 +126,30 @@ namespace DiscordHackWeek2019.Commands.Modules
             ReactionMessageHelper.CreateConfirmReactionMessage(Context, message,
                 async r =>
                 {
+                    Context.ClearCachedValues();
+                    inventory = Context.GetInventory(Context.User);
+
+                    if (!inventory.HasEmoji(emoji))
+                    {
+                        await message.ModifyAsync(mod =>
+                        {
+                            mod.Content = "";
+                            EmbedBuilder builder = new EmbedBuilder();
+                            builder.WithColor(Color.Red);
+                            builder.WithTitle(Strings.SomethingChanged);
+                            builder.WithDescription($"{Context.User.Mention}, you no longer have any {emoji} to sell");
+                            mod.Embed = builder.Build();
+                        });
+                        return;
+                    }
+
                     var (toSell, index) = inventory.Enumerate(emoji).Select((e, i) => (e, i)).OrderBy(e => e.e.Transactions.Count).First();
 
                     inventory.RemoveEmoji(emoji, index);
 
                     MarketHelper.AddListing(Context, MarketId(market), toSell, price);
                     inventory.Save();
-                    await message.ModifyAsync(m => m.Content = $"Listed your {emoji} for {Context.Money(price)} in {Context.GetMarketName(MarketId(market))}");
+                    await message.ModifyAsync(m => m.Content = $"{Context.WhatDoICall(Context.User)} listed their {emoji} for {Context.Money(price)} in {Context.GetMarketName(MarketId(market))}");
                 }, 
                 async r =>
                 {
