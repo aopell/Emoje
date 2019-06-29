@@ -360,7 +360,7 @@ namespace DiscordHackWeek2019.Helpers
 
                     var market = ctx.MarketCollection.GetById(purchase.MarketId);
 
-                    var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId)
+                    var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId);
 
                     emoji.Transactions.Add(Queue(trans).Receive());
                     emoji.Owner = purchase.BuyerId;
