@@ -11,7 +11,7 @@ namespace DiscordHackWeek2019.Helpers
 {
     public static class StockAPIHelper
     {
-        private static string Token => DiscordBot.MainInstance.Secret.IexCloudTestingSecret; // TODO DiscordBot.MainInstance.Secret.IexCloudSecret ;
+        private static string Token => DiscordBot.MainInstance.Secret.IexCloudSecret;
 
         private static string GenerateQuoteUrl(string symbol) => $"https://sandbox.iexapis.com/stable/stock/{symbol}/quote?token={Token}";
 
