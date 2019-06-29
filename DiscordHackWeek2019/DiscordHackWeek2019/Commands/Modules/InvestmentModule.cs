@@ -76,7 +76,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             async Task onReject(ReactionMessage m)
             {
-                await m.Message.ModifyAsync(properties => properties.Content = "Purchase canceled");
+                await m.Message.ModifyAsync(properties => properties.Content = $"Purchase of {(symbolType == SymbolType.Crypto ? "" : $"{ (toBuy == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} canceled");
             }
         }
 
@@ -237,7 +237,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             async Task onReject(ReactionMessage m)
             {
-                await m.Message.ModifyAsync(p => p.Content = "Sale canceled");
+                await m.Message.ModifyAsync(p => p.Content = $"Sale of {(symbolType == SymbolType.Crypto ? "" : $"{ (toSell == 1 ? "one share" : "shares")} in ")}{name.ToUpper()} canceled");
             }
         }
 
@@ -266,7 +266,7 @@ namespace DiscordHackWeek2019.Commands.Modules
 
             if (investments.Count() == 0) throw new DiscordCommandException("Nothing to show", $"{Context.User.Mention}, you have no {(active ? "current" : "old")} investments {("all".StartsWith(type) ? "at all" : "of that type")}");
 
-            string title = $"{("all".StartsWith(type) ? "All investments" : "Investmests in ")}";
+            string title = $"{(active ? "Current investments" : "Investment history")}";
 
             const int NUM_PER_PAGE = 10;
 

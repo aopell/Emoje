@@ -225,6 +225,7 @@ namespace DiscordHackWeek2019.Helpers
         private void Process()
         {
             var marketDB = DiscordBot.MainInstance.DataProvider.GetCollection<Market>("markets");
+            var userDB = DiscordBot.MainInstance.DataProvider.GetCollection<User>("users");
 
             foreach (var thing in ToProcess.GetConsumingEnumerable())
             {
@@ -278,7 +279,23 @@ namespace DiscordHackWeek2019.Helpers
 
                         marketDB.Upsert(market);
 
-                        trans.IdCallback.Post(trans.Transaction.GetInfo());
+                        Task.Run(() =>
+                        {
+                            trans.IdCallback.Post(trans.Transaction.GetInfo());
+
+                            var acquisitor = userDB.GetById(trans.Transaction.Acquisitor);
+                            acquisitor.Transactions.Add(trans.Transaction.GetInfo());
+
+                            userDB.Update(acquisitor);
+                            var sellerId = trans.Transaction.Seller;
+                            if (sellerId.IsSpecified)
+                            {
+                                var seller = userDB.GetById(sellerId.Value);
+
+                                seller.Transactions.Add(trans.Transaction.GetInfo());
+                                userDB.Update(seller);
+                            }
+                        });
                     }
                 );
             }
@@ -343,7 +360,7 @@ namespace DiscordHackWeek2019.Helpers
 
                     var market = ctx.MarketCollection.GetById(purchase.MarketId);
 
-                    var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId);
+                    var trans = Transaction.BetweenUsers(listing, purchase.MarketId, purchase.BuyerId)
 
                     emoji.Transactions.Add(Queue(trans).Receive());
                     emoji.Owner = purchase.BuyerId;
