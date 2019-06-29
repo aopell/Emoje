@@ -29,6 +29,7 @@ namespace DiscordHackWeek2019.Helpers
         private static List<HelpInfo> GetAllCommands(Type module, string prefix = "")
         {
             List<HelpInfo> infos = new List<HelpInfo>();
+            if (Attribute.IsDefined(module, typeof(AdminRequiredAttribute))) return infos;
             if (Attribute.IsDefined(module, typeof(GroupAttribute)))
             {
                 var attr = module.GetCustomAttribute<GroupAttribute>();
@@ -37,7 +38,7 @@ namespace DiscordHackWeek2019.Helpers
             var nestedTypes = module.GetNestedTypes().SelectMany(x => GetAllCommands(x, prefix));
             infos.AddRange(nestedTypes);
 
-            var commands = module.GetMethods().Where(m => Attribute.IsDefined(m, typeof(CommandAttribute)));
+            var commands = module.GetMethods().Where(m => Attribute.IsDefined(m, typeof(CommandAttribute)) && !Attribute.IsDefined(m, typeof(AdminRequiredAttribute)));
 
             foreach (var command in commands)
             {

@@ -32,7 +32,7 @@ namespace DiscordHackWeek2019.Commands.Modules
                 result.WithTitle("Help");
                 result.WithFooter($"Page {num} of {totalPages}");
                 var commands = HelpHelper.AllCommands.Skip((num - 1) * NUM_PER_PAGE).Take(NUM_PER_PAGE);
-                foreach (var c in commands)
+                foreach (var c in commands.OrderBy(c => c.Command))
                 {
                     result.AddField(c.ToString(), c.Summary ?? "*No help text provided*");
                 }
@@ -45,7 +45,7 @@ namespace DiscordHackWeek2019.Commands.Modules
         {
             bool detailed = true;
             var commands = HelpHelper.AllCommands.Where(c => c.Command == command);
-            if(!commands.Any())
+            if (!commands.Any())
             {
                 detailed = false;
                 commands = HelpHelper.AllCommands.Where(c => c.Command.StartsWith(command + " "));
@@ -53,7 +53,7 @@ namespace DiscordHackWeek2019.Commands.Modules
             if (!commands.Any()) throw new DiscordCommandException("Bad argument", $"{Context.User.Mention}, there were no commands matching \"{command}\" found");
             EmbedBuilder result = new EmbedBuilder();
             result.WithTitle("Help");
-            foreach (var c in commands)
+            foreach (var c in commands.OrderBy(c => c.Command))
             {
                 StringBuilder info = new StringBuilder();
                 info.AppendLine(c.Summary ?? "*No help text provided*");

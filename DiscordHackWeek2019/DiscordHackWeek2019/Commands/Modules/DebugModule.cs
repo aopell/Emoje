@@ -11,7 +11,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace DiscordHackWeek2019.Commands.Modules
 {
-    [Group("debug")]
+    [Group("debug"), AdminRequired]
     public class DebugModule : ModuleBase<BotCommandContext>
     {
         [Command("emojilist")]

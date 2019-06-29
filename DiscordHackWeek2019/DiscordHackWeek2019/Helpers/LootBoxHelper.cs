@@ -11,7 +11,7 @@ namespace DiscordHackWeek2019.Helpers
     {
         public static Dictionary<string, LootBox> LootBoxVarieties { get; set; } = new Dictionary<string, LootBox>
         {
-            ["normal"] = new LootBox { Cost = 500, Name = "normal", Emote = Emote.Parse("<:lootbox:593607880251277322>"), RarityRatios = new[] { new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 } } }
+            ["normal"] = new LootBox { Cost = 250, Name = "normal", Emote = Emote.Parse("<:lootbox:593607880251277322>"), RarityRatios = new[] { new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 }, new[] { 55, 25, 15, 5 } } }
         };
 
         public static IReadOnlyCollection<string> GetAllLootBoxNames(BotCommandContext ctx) => GetAllLootBoxNames(ctx.Guild.Id);
