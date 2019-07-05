@@ -69,7 +69,7 @@ namespace DiscordHackWeek2019.Helpers
             if (message.Author.Id == botUser.Id && reaction.UserId != botUser.Id)
             {
                 var reactionMessage = GetReactionMessageById(message.Id);
-                if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id && reactionMessage.AcceptsAllReactions || reactionMessage.AcceptedReactions.Contains(reaction.Emote.ToString()))
+                if (reactionMessage != null && reaction.UserId == reactionMessage.Context.User.Id && (reactionMessage.AcceptsAllReactions || reactionMessage.AcceptedReactions.Contains(reaction.Emote.ToString())))
                 {
                     try
                     {
